@@ -1,4 +1,4 @@
-val scala3Version = "2.13.7"
+val scala2Version = "2.13.7"
 
 val circeVersion = "0.14.1"
 
@@ -6,8 +6,9 @@ lazy val root = project
   .in(file("."))
   .settings(
     name := "semantic-graphs-analytics",
+    organization := "com.virtuslab.semanticgraphs",
     version := "0.1.0-SNAPSHOT",
-    scalaVersion := scala3Version,
+    scalaVersion := scala2Version,
     Compile / PB.targets := Seq(
       scalapb.gen() -> (Compile / sourceManaged).value
     ),
@@ -19,5 +20,7 @@ lazy val root = project
       "io.circe" %% "circe-generic",
       "io.circe" %% "circe-parser"
     ).map(_ % circeVersion),
-    libraryDependencies += "org.apache.spark" %% "spark-graphx" % "3.2.0"
+    libraryDependencies += "org.apache.spark" %% "spark-graphx" % "3.3.1",
+    libraryDependencies += "org.apache.spark" %% "spark-sql" % "3.3.1",
+    libraryDependencies += "com.lihaoyi" %% "os-lib" % "0.8.1"
   )
