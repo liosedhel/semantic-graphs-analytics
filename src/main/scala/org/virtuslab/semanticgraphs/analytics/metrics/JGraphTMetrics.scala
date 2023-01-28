@@ -2,7 +2,11 @@ package org.virtuslab.semanticgraphs.analytics.metrics
 
 import com.virtuslab.semanticgraphs.proto.model.graphnode.GraphNode
 import org.jgrapht.alg.clustering.{GirvanNewmanClustering, KSpanningTreeClustering, LabelPropagationClustering}
-import org.jgrapht.alg.connectivity.{BiconnectivityInspector, ConnectivityInspector, KosarajuStrongConnectivityInspector}
+import org.jgrapht.alg.connectivity.{
+  BiconnectivityInspector,
+  ConnectivityInspector,
+  KosarajuStrongConnectivityInspector
+}
 import org.jgrapht.alg.scoring.{BetweennessCentrality, ClusteringCoefficient}
 import org.jgrapht.alg.shortestpath.{BFSShortestPath, GraphMeasurer}
 import org.jgrapht.graph.{AsUndirectedGraph, DefaultEdge}
@@ -10,32 +14,30 @@ import org.jgrapht.graph.builder.GraphTypeBuilder
 import org.jgrapht.{Graph, GraphMetrics}
 import org.virtuslab.semanticgraphs.analytics.partitions.PartitionResults
 
-object JGraphTMetrics {
+object JGraphTMetrics:
 
   import scala.jdk.CollectionConverters.{ListHasAsScala, SetHasAsScala}
 
-  def emptyGraph(): Graph[String, LabeledEdge] = {
+  def emptyGraph(): Graph[String, LabeledEdge] =
     GraphTypeBuilder
       .directed[String, LabeledEdge]()
       .allowingMultipleEdges(true)
       .allowingSelfLoops(false)
       .edgeClass(classOf[LabeledEdge])
       .buildGraph()
-  }
 
-  def emptyUndirectedGraph(): Graph[String, LabeledEdge] = {
+  def emptyUndirectedGraph(): Graph[String, LabeledEdge] =
     GraphTypeBuilder
       .undirected[String, LabeledEdge]()
-      //.allowingMultipleEdges(true)
+      // .allowingMultipleEdges(true)
       .allowingSelfLoops(false)
       .edgeClass(classOf[LabeledEdge])
       .buildGraph()
-  }
 
   case class LabeledEdge(parentId: String, childId: String, role: String) extends DefaultEdge
 
-  def addEdge(graph: Graph[String, LabeledEdge], parentId: String, childId: String, role: String): Unit = {
-    if (parentId != childId) {
+  def addEdge(graph: Graph[String, LabeledEdge], parentId: String, childId: String, role: String): Unit =
+    if parentId != childId then
       graph.addVertex(childId)
       graph.addVertex(parentId)
       graph.addEdge(
@@ -43,10 +45,8 @@ object JGraphTMetrics {
         childId,
         LabeledEdge(parentId, childId, role)
       )
-    }
-  }
 
-  def exportUndirected(nodes: Iterable[GraphNode]): Graph[String, LabeledEdge] = {
+  def exportUndirected(nodes: Iterable[GraphNode]): Graph[String, LabeledEdge] =
     val graph: Graph[String, LabeledEdge] = emptyUndirectedGraph()
 
     nodes
@@ -56,26 +56,23 @@ object JGraphTMetrics {
       }
 
     graph
-  }
 
-  def computeStronglyConnectedComponents(directedGraph: Graph[String, LabeledEdge]): Map[String, Int] = {
+  def computeStronglyConnectedComponents(directedGraph: Graph[String, LabeledEdge]): Map[String, Int] =
     val scAlg = new KosarajuStrongConnectivityInspector(directedGraph)
     import scala.jdk.CollectionConverters.{ListHasAsScala, SetHasAsScala}
     scAlg.stronglyConnectedSets().asScala.toList.map(_.asScala.toSet).zipWithIndex.foldLeft(Map.empty[String, Int]) {
       case (map, (nodes, index)) => nodes.foldLeft(map)((r, node) => r.updated(node, index))
     }
-  }
 
-  def computeBridges(directedGraph: Graph[String, LabeledEdge]): Unit = {
+  def computeBridges(directedGraph: Graph[String, LabeledEdge]): Unit =
     val scAlg = new BiconnectivityInspector(directedGraph)
     import scala.jdk.CollectionConverters.SetHasAsScala
     scAlg.getBridges.asScala.foreach(le => println(s"${le.parentId}--${le.role}-->${le.childId}"))
-  }
 
   /**
     * Returns map of node id and it's component number
     */
-  def computeConnectedComponents(graph: Graph[String, LabeledEdge]): Map[String, Int] = {
+  def computeConnectedComponents(graph: Graph[String, LabeledEdge]): Map[String, Int] =
     val connectedComponents = new ConnectivityInspector(graph)
 
     connectedComponents
@@ -87,15 +84,13 @@ object JGraphTMetrics {
       .foldLeft(Map.empty[String, Int]) { case (map, (nodes, index)) =>
         nodes.foldLeft(map)((r, node) => r.updated(node, index))
       }
-  }
 
-  def partition(directedGraph: Graph[String, LabeledEdge], nparts: Int): Map[String, Int] = {
+  def partition(directedGraph: Graph[String, LabeledEdge], nparts: Int): Map[String, Int] =
     val part = new KSpanningTreeClustering[String, LabeledEdge](directedGraph, nparts)
     part.getClustering.getClusters.asScala.toList.map(_.asScala.toSet).zipWithIndex.foldLeft(Map.empty[String, Int]) {
       case (map, (nodes, index)) => nodes.foldLeft(map)((r, node) => r.updated(node, index))
     }
-  }
-  def labelPropagationClustering(graph: List[GraphNode], maxIterations: Int): PartitionResults = {
+  def labelPropagationClustering(graph: List[GraphNode], maxIterations: Int): PartitionResults =
     val undirectedGraph = exportUndirected(graph)
     val part = new LabelPropagationClustering[String, LabeledEdge](undirectedGraph, maxIterations)
     val nodeToPart =
@@ -109,9 +104,8 @@ object JGraphTMetrics {
       nodeToPart,
       comment = "Calculated by JGraphT LabelPropagationClustering"
     )
-  }
 
-  def GirvanNewmanClustering(graph: List[GraphNode], k: Int): PartitionResults = {
+  def GirvanNewmanClustering(graph: List[GraphNode], k: Int): PartitionResults =
     val undirectedGraph = exportUndirected(graph)
     val part = new GirvanNewmanClustering[String, LabeledEdge](undirectedGraph, k)
     val nodeToPart =
@@ -125,91 +119,76 @@ object JGraphTMetrics {
       nodeToPart,
       comment = "Calculated by JGraphT GirvanNewmanClustering"
     )
-  }
 
-  def betweennessCentrality(graph: Graph[String, LabeledEdge]) = {
+  def betweennessCentrality(graph: Graph[String, LabeledEdge]) =
     new BetweennessCentrality(graph, false).getScores
-  }
 
-  def density(graph: Graph[String, LabeledEdge]): Double = {
+  def density(graph: Graph[String, LabeledEdge]): Double =
     val E = graph.edgeSet().size().toDouble
     val V = graph.vertexSet().size().toDouble
     E / (V * (V - 1))
-  }
 
-  def assortativityCoefficient(graph: Graph[String, LabeledEdge]): Double = {
+  def assortativityCoefficient(graph: Graph[String, LabeledEdge]): Double =
     val edgeCount = graph.edgeSet.size
     var n1, n2, dn = 0.0
 
     import scala.jdk.CollectionConverters.SetHasAsScala
-    for (e <- graph.edgeSet.asScala) {
+    for e <- graph.edgeSet.asScala do
       val d1 = graph.degreeOf(graph.getEdgeSource(e))
       val d2 = graph.degreeOf(graph.getEdgeTarget(e))
       n1 += d1 * d2
       n2 += d1 + d2
       dn += d1 * d1 + d2 * d2
-    }
     n1 /= edgeCount
     n2 = (n2 / (2 * edgeCount)) * (n2 / (2 * edgeCount))
     dn /= (2 * edgeCount)
 
     (n1 - n2) / (dn - n2)
-  }
 
-  def assortativityCoefficient2(graph: Graph[String, LabeledEdge]): Double = {
+  def assortativityCoefficient2(graph: Graph[String, LabeledEdge]): Double =
     import scala.jdk.CollectionConverters.SetHasAsScala
     val S1 = 2 * graph.edgeSet().size()
-    val S2 = graph.vertexSet().asScala.foldLeft(0.0){case (r, x) => r + Math.pow(graph.degreeOf(x), 2)}
-    val S3 = graph.vertexSet().asScala.foldLeft(0.0){case (r, x) => r + Math.pow(graph.degreeOf(x), 3)}
+    val S2 = graph.vertexSet().asScala.foldLeft(0.0) { case (r, x) => r + Math.pow(graph.degreeOf(x), 2) }
+    val S3 = graph.vertexSet().asScala.foldLeft(0.0) { case (r, x) => r + Math.pow(graph.degreeOf(x), 3) }
 
     var S_e = 0.0
-    for (e <- graph.edgeSet.asScala) {
+    for e <- graph.edgeSet.asScala do
       val d1 = graph.degreeOf(graph.getEdgeSource(e))
       val d2 = graph.degreeOf(graph.getEdgeTarget(e))
       S_e += d1 * d2
-    }
 
     (S_e * S1 - Math.pow(S2, 2)) / (S3 * S1 - Math.pow(S2, 2))
-  }
 
-  def averageClusteringCoefficient(directed: Graph[String, LabeledEdge]): Double = {
+  def averageClusteringCoefficient(directed: Graph[String, LabeledEdge]): Double =
     new ClusteringCoefficient[String, LabeledEdge](directed).getAverageClusteringCoefficient
-  }
 
-  def globalClusteringCoefficient(undirectedGraph: Graph[String, LabeledEdge]): Double = {
-    new ClusteringCoefficient[String, LabeledEdge](new AsUndirectedGraph(undirectedGraph)).getGlobalClusteringCoefficient
-  }
+  def globalClusteringCoefficient(undirectedGraph: Graph[String, LabeledEdge]): Double =
+    new ClusteringCoefficient[String, LabeledEdge](
+      new AsUndirectedGraph(undirectedGraph)
+    ).getGlobalClusteringCoefficient
 
-  def averageDegree(graph: Graph[String, LabeledEdge]): Double = {
+  def averageDegree(graph: Graph[String, LabeledEdge]): Double =
     val nodes = graph.vertexSet().asScala.toList.map(v => graph.degreeOf(v)).filter(_ > 0)
     nodes.sum / nodes.size.toDouble
-  }
 
-  def averageOutDegree(graph: Graph[String, LabeledEdge]): Double = {
+  def averageOutDegree(graph: Graph[String, LabeledEdge]): Double =
     val nodes = graph.vertexSet().asScala.toList.map(v => graph.outDegreeOf(v)).filter(_ > 0)
     nodes.sum / nodes.size.toDouble
-  }
 
-  def averageInDegree(graph: Graph[String, LabeledEdge]): Double = {
+  def averageInDegree(graph: Graph[String, LabeledEdge]): Double =
     val nodes = graph.vertexSet().asScala.toList.map(v => graph.inDegreeOf(v)).filter(_ > 0)
     nodes.sum / nodes.size.toDouble
-  }
 
-  def median(graph: Graph[String, LabeledEdge]): Double = {
+  def median(graph: Graph[String, LabeledEdge]): Double =
     val nodes = graph.vertexSet().asScala.toList.map(v => graph.degreeOf(v)).filter(_ > 0).sorted
-    if (nodes.size % 2 == 1) nodes(nodes.size / 2)
-    else {
+    if nodes.size % 2 == 1 then nodes(nodes.size / 2)
+    else
       val up = nodes(nodes.size / 2)
       val down = nodes(nodes.size / 2 + 1)
       (up + down) / 2
-    }
-  }
 
-  def numberOfTriangles(undirectedGraph: Graph[String, LabeledEdge]): Long = {
+  def numberOfTriangles(undirectedGraph: Graph[String, LabeledEdge]): Long =
     GraphMetrics.getNumberOfTriangles(new AsUndirectedGraph(undirectedGraph))
-  }
 
   def radius(graph: Graph[String, LabeledEdge]): Double =
     new GraphMeasurer[String, LabeledEdge](graph, new BFSShortestPath[String, LabeledEdge](graph)).getRadius
-
-}

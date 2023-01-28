@@ -16,10 +16,9 @@ case class GraphStat(id: String, label: String, score: Double)
 case class NodeScore(id: String, label: String, score: Double)
 case class Statistic(id: String, description: String, nodes: List[NodeScore])
 
-case class MetricIdAndDescription(id: String, desc: String) {
+case class MetricIdAndDescription(id: String, desc: String):
   override def toString(): String = desc
-}
-object Statistic {
+object Statistic:
   val loc = MetricIdAndDescription("loc", "Lines of Code")
   val outDegree = MetricIdAndDescription("out-degree", "Outgoing Degree")
   val inDegree = MetricIdAndDescription("in-degree", "Incoming Degree")
@@ -29,7 +28,6 @@ object Statistic {
   val betweenness = MetricIdAndDescription("betweenness", "Betweenness Centrality")
   val harmonic = MetricIdAndDescription("harmonic", "Harmonic Centrality")
   val combined = MetricIdAndDescription("combined", "All metrics combined")
-}
 case class ProjectScoringSummary(
   projectName: String,
   workspace: String,
@@ -37,66 +35,58 @@ case class ProjectScoringSummary(
   graphStats: List[GraphStat]
 )
 
-object CrucialNodes {
+object CrucialNodes:
 
-  def analyze(semanticCodeGraph: SemanticCodeGraph, filePrefix: String): ProjectScoringSummary = {
+  def analyze(semanticCodeGraph: SemanticCodeGraph, filePrefix: String): ProjectScoringSummary =
     val jGraphTExporter = new JGraphTAnalyzer(semanticCodeGraph)
-    val stats = jGraphTExporter.computeStatistics(semanticCodeGraph.project, semanticCodeGraph.projectAndVersion.workspace)
+    val stats =
+      jGraphTExporter.computeStatistics(semanticCodeGraph.project, semanticCodeGraph.projectAndVersion.workspace)
     val outputFile = s"$filePrefix-stats-${semanticCodeGraph.project}.crucial.json"
     JsonUtils.dumpJsonFile(outputFile, stats.asJson.toString)
     println(s"Results exported to: $outputFile")
     stats
-  }
 
-}
-
-object CrucialNodesApp extends App {
+object CrucialNodesApp extends App:
   val workspace = args(0)
   val projectName = workspace.split("/").last
   val scg = SemanticCodeGraph.fromZip(ProjectAndVersion(workspace, workspace.split("/").last, ""))
   CrucialNodes.analyze(scg, projectName)
-}
 
-object CrucialNodesAnalyzeAll extends App {
-  def analyzeAll() = {
+object CrucialNodesAnalyzeAll extends App:
+  def analyzeAll() =
     SemanticCodeGraph.readAllProjects().foreach { scg =>
       CrucialNodes.analyze(scg, "all"); println(); Thread.sleep(100)
     }
-  }
 
   analyzeAll()
-}
 
-object CrucialNodesAnalyzeAllZipped extends App {
-  def analyzeAll() = {
+object CrucialNodesAnalyzeAllZipped extends App:
+  def analyzeAll() =
     SemanticCodeGraph.readAllProjects().foreach { scg =>
       CrucialNodes.analyze(scg, "all"); println(); Thread.sleep(100)
     }
-  }
 
   analyzeAll()
-}
 
-class JGraphTAnalyzer(semanticCodeGraph: SemanticCodeGraph) {
+class JGraphTAnalyzer(semanticCodeGraph: SemanticCodeGraph):
 
   val graph = semanticCodeGraph.graph
   val nodes = semanticCodeGraph.nodesMap
 
-  def pickTopN[T](k: Int, iterable: Iterable[T])(implicit ord: Ordering[T]): List[T] = {
+  def pickTopN[T](k: Int, iterable: Iterable[T])(implicit ord: Ordering[T]): List[T] =
     val q = collection.mutable.PriorityQueue[T]()
     iterable.foreach { elem =>
       q.enqueue(elem)
-      if (q.size > k) q.dequeue()
+      if q.size > k then q.dequeue()
     }
     q.toList.sorted
-  }
 
   def computeStats(
     id: MetricIdAndDescription,
     desc: String,
     stats: Iterable[(String, java.lang.Double)],
     take: Int = 10
-  ): Statistic = {
+  ): Statistic =
     println(s"Computed: $desc")
 
     val statistics = pickTopN(
@@ -112,9 +102,8 @@ class JGraphTAnalyzer(semanticCodeGraph: SemanticCodeGraph) {
         NodeScore(nodeId, node.displayName, score)
       }
     )
-  }
 
-  def computeStatistics(projectName: String, workspace: String): ProjectScoringSummary = {
+  def computeStatistics(projectName: String, workspace: String): ProjectScoringSummary =
     println(
       s"Nodes size: ${graph.vertexSet().size()}, Edges ${graph.edgeSet().size()}"
     )
@@ -193,11 +182,13 @@ class JGraphTAnalyzer(semanticCodeGraph: SemanticCodeGraph) {
       )
     )
 
-    val averageClusteringCoefficient = JGraphTMetrics.averageClusteringCoefficient(JGraphTMetrics.exportUndirected(semanticCodeGraph.nodes))
+    val averageClusteringCoefficient =
+      JGraphTMetrics.averageClusteringCoefficient(JGraphTMetrics.exportUndirected(semanticCodeGraph.nodes))
 //    println(
 //      s"Average Clustering Coefficient $averageClusteringCoefficient"
 //    )
-    val clusteringCoefficient = GraphStat("clustering_coefficient", "Average Clustering Coefficient", averageClusteringCoefficient)
+    val clusteringCoefficient =
+      GraphStat("clustering_coefficient", "Average Clustering Coefficient", averageClusteringCoefficient)
 
     val averageNodeDegree = JGraphTMetrics.averageDegree(graph)
 //    println(
@@ -211,9 +202,8 @@ class JGraphTAnalyzer(semanticCodeGraph: SemanticCodeGraph) {
       statistics :+ computeCombinedMetrics(statistics),
       List(nodesDegree, clusteringCoefficient)
     )
-  }
 
-  def computeCombinedMetrics(stats: List[Statistic]): Statistic = {
+  def computeCombinedMetrics(stats: List[Statistic]): Statistic =
     val list = stats.flatMap(_.nodes)
     val a = list.groupBy(node => (node.id, node.label)).mapValues(_.size)
     Statistic(
@@ -223,6 +213,3 @@ class JGraphTAnalyzer(semanticCodeGraph: SemanticCodeGraph) {
         NodeScore(id, label, score)
       }
     )
-  }
-
-}

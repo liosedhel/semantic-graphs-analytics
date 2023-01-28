@@ -13,8 +13,8 @@ import scala.collection.mutable.Queue
 import scala.collection.mutable.HashMap
 import scala.collection.mutable.ListBuffer
 
-object KBetweenness {
-  def run[VD : ClassTag, ED : ClassTag](graph: Graph[VD, ED], k: Int): Graph[Double, Double] = {
+object KBetweenness:
+  def run[VD : ClassTag, ED : ClassTag](graph: Graph[VD, ED], k: Int): Graph[Double, Double] =
     val kGraphletsGraph =
       createKGraphlets(graph, k)
 
@@ -26,19 +26,18 @@ object KBetweenness {
       aggregateGraphletsBetweennessScores(vertexKBcGraph)
 
     kBCGraph
-  }
 
   def createKGraphlets[VD : ClassTag, ED : ClassTag](
     graph: Graph[VD, ED],
     k: Int
-  ): Graph[(Double, List[VertexId], List[(VertexId, VertexId)]), Double] = {
+  ): Graph[(Double, List[VertexId], List[(VertexId, VertexId)]), Double] =
     val graphContainingGraphlets: Graph[(Double, List[VertexId], List[(VertexId, VertexId)]), Double] =
       graph
         // Init edges to hold - Edge Betweenness to 0.0
-        .mapTriplets[Double] { x: EdgeTriplet[VD, ED] => 0.0 }
+        .mapTriplets[Double]((x: EdgeTriplet[VD, ED]) => 0.0)
         // Init vertices to hold - Vertex betweenness (0.0), and K distance Edge list (empty)
         .mapVertices((id, attr) => (0.0, List[VertexId](id), List[(VertexId, VertexId)]()))
-        //.reverse // Because GraphX is directed and we want graphlets containing all vertices a vertex might effect
+        // .reverse // Because GraphX is directed and we want graphlets containing all vertices a vertex might effect
         .cache()
 
     def vertexProgram(
@@ -68,14 +67,13 @@ object KBetweenness {
       sendMessage,
       messageCombiner
     )
-    //.reverse // return to originial directon
-  }
+    // .reverse // return to originial directon
 
   def computeVertexBetweenessCentrality(
     id: VertexId,
     vlist: List[VertexId],
     elist: List[(VertexId, VertexId)]
-  ): List[(VertexId, Double)] = {
+  ): List[(VertexId, Double)] =
     // Init data structures
     val s = Stack[VertexId]()
     val q = Queue[VertexId]()
@@ -87,12 +85,11 @@ object KBetweenness {
     val neighbourMap: HashMap[VertexId, List[VertexId]] = getNeighbourMap(vlist, elist)
     val medBC = new ListBuffer[(VertexId, Double)]()
 
-    for (vertex <- vlist) {
+    for vertex <- vlist do
       dist.put(vertex, Double.MaxValue)
       sigma.put(vertex, 0.0)
       delta.put(vertex, 0.0)
       predecessors.put(vertex, ListBuffer[VertexId]())
-    }
 
     // Init values before first iteration
     dist(id) = 0.0
@@ -100,50 +97,40 @@ object KBetweenness {
     q.enqueue(id)
 
     // Go over all queued vertices
-    while (!(q.isEmpty)) {
+    while !q.isEmpty do
       val v = q.dequeue()
       s.push(v)
       // Go over v's neighbours
-      for (w <- neighbourMap(v)) {
-        if (dist(w) == Double.MaxValue) {
+      for w <- neighbourMap(v) do
+        if dist(w) == Double.MaxValue then
           dist(w) = dist(v) + 1.0
           q.enqueue(w)
-        }
-        if (dist(w) == (dist(v) + 1.0)) {
+        if dist(w) == (dist(v) + 1.0) then
           sigma(w) += sigma(v)
           predecessors(w).+=(v)
-        }
-      }
-    }
 
-    while (s.nonEmpty) {
+    while s.nonEmpty do
       val v = s.pop()
-      for (w <- predecessors(v))
-        delta(w) += (sigma(w) / sigma(v)) * (delta(v) + 1.0)
-      if (v != id) {
-        medBC.append((v, delta(v)))
-      }
-    }
+      for w <- predecessors(v) do delta(w) += (sigma(w) / sigma(v)) * (delta(v) + 1.0)
+      if v != id then medBC.append((v, delta(v)))
 
     medBC.toList
-  }
 
-  def getNeighbourMap(vlist: List[VertexId], elist: List[(VertexId, VertexId)]): HashMap[VertexId, List[VertexId]] = {
+  def getNeighbourMap(vlist: List[VertexId], elist: List[(VertexId, VertexId)]): HashMap[VertexId, List[VertexId]] =
     val neighbourList = new HashMap[VertexId, List[VertexId]]()
 
-    vlist.foreach { case (v) =>
+    vlist.foreach { case v =>
       val nlist = elist
-        .filter { case (e) => ((e._1 == v) || (e._2 == v)) }
-        .map { case (e) => if (e._1 == v) e._2 else e._1 }
+        .filter { case e => (e._1 == v) || (e._2 == v) }
+        .map { case e => if e._1 == v then e._2 else e._1 }
       neighbourList.+=((v, nlist.distinct))
     }
 
     neighbourList
-  }
 
   def aggregateGraphletsBetweennessScores(
     vertexKBcGraph: Graph[(VertexId, List[(VertexId, Double)]), Double]
-  ): Graph[Double, Double] = {
+  ): Graph[Double, Double] =
     val DEFAULT_BC = 0.0
 
     val kBCAdditions =
@@ -158,9 +145,6 @@ object KBetweenness {
 
     val kBCGraph =
       vertexKBcGraph
-        .outerJoinVertices(verticeskBC) { case (v_id, (g_id, g_medkBC), kBC) => (kBC.getOrElse(DEFAULT_BC)) }
+        .outerJoinVertices(verticeskBC) { case (v_id, (g_id, g_medkBC), kBC) => kBC.getOrElse(DEFAULT_BC) }
 
     kBCGraph
-  }
-
-}

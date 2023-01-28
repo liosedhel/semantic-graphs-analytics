@@ -10,20 +10,24 @@ import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 import scala.io.Source
 
-object PatohClustering extends App {
+object PatohClustering extends App:
 
   val workspace = args(0)
   val nparts = args(1).toInt
-  val projectName = workspace.split("/").last
-  implicit val (tmpFolder, multiPrinter) = PartitionHelpers.multiPrinter(projectName, "patoh")
+  val projectName = workspace.split("/").lastOption.get
+  implicit val (tmpFolder: File, multiPrinter: MultiPrinter) = PartitionHelpers.multiPrinter(projectName, "patoh")
 
   val biggestComponentNodes =
-    PartitionHelpers.takeBiggestComponentOnly(SemanticCodeGraph.readOnlyGlobalNodes(ProjectAndVersion(workspace, projectName, "")))(multiPrinter)
+    PartitionHelpers.takeBiggestComponentOnly(
+      SemanticCodeGraph.readOnlyGlobalNodes(ProjectAndVersion(workspace, projectName, ""))
+    )(multiPrinter)
 
   val results = PatohPartitions.partition(biggestComponentNodes, projectName, nparts)
 
-  PartitionResults.print(multiPrinter, results.sortBy(_.packageDistribution.weightedAverageAccuracy)(implicitly[Ordering[Int]].reverse))
-
+  PartitionResults.print(
+    multiPrinter,
+    results.sortBy(_.packageDistribution.weightedAverageAccuracy)(implicitly[Ordering[Int]].reverse)
+  )
 
   PartitionHelpers.exportAllToGDF(
     nparts,
@@ -31,29 +35,27 @@ object PatohClustering extends App {
     s"${tmpFolder.getAbsolutePath}/$projectName-all.gdf",
     results
   )
-}
 
-object PatohPartitions {
+object PatohPartitions:
 
-  def partition(nodes: List[GraphNode], projectName: String, nparts: Int)(implicit multiPrinter: MultiPrinter): List[PartitionResults] = {
+  def partition(nodes: List[GraphNode], projectName: String, nparts: Int)(implicit
+    multiPrinter: MultiPrinter
+  ): List[PartitionResults] =
     val indexes = PatohPartitions.exportPatohInputGraph(projectName, nodes)
     val result = computePatohPartitioning(nodes, indexes, nparts, projectName)
     new File(s"$projectName.patoh").delete()
     result
-  }
 
   def computePatohPartitioning(nodes: List[GraphNode], indexes: Array[String], nparts: Int, projectName: String)(
     implicit multiPrinter: MultiPrinter
-  ): List[PartitionResults] = {
-    if (nparts > 1) {
+  ): List[PartitionResults] =
+    if nparts > 1 then
       multiPrinter.println(s"Running patoh parts=$nparts")
       val computing =
         os.proc("patoh", s"$projectName.patoh", nparts, "IB=0.5", "PA=11")
           .call()
 
-      if (computing.exitCode != 0) {
-        throw new RuntimeException(s"Computation failed")
-      }
+      if computing.exitCode != 0 then throw new RuntimeException(s"Computation failed")
       println(computing.out.text())
 
       val patohPartFile = s"$projectName.patoh.part.$nparts"
@@ -67,12 +69,9 @@ object PatohPartitions {
         nodeToPart = patohResults,
         comment = computing.out.text()
       )
-    } else {
-      Nil
-    }
-  }
+    else Nil
 
-  def readPatohResults(file: String, indexes: Array[String]): Map[String, Int] = {
+  def readPatohResults(file: String, indexes: Array[String]): Map[String, Int] =
     Source
       .fromFile(file)
       .getLines()
@@ -80,16 +79,13 @@ object PatohPartitions {
       .zipWithIndex
       .map { case (part, index) => (indexes(index), part.toInt) }
       .toMap
-  }
 
-
-  def exportPatohInputGraph(projectName: String, nodes: List[GraphNode]): Array[String] = {
+  def exportPatohInputGraph(projectName: String, nodes: List[GraphNode]): Array[String] =
     val (nodeToIndex, networks) = toNodeAndEdges(nodes)
     dumpGraph(projectName, nodeToIndex.size, networks)
     nodeToIndex.toList.sortBy(_._2).map(_._1).toArray
-  }
 
-  private def toNodeAndEdges(nodes: List[GraphNode]): (mutable.Map[String, Int], List[Set[Int]]) = {
+  private def toNodeAndEdges(nodes: List[GraphNode]): (mutable.Map[String, Int], List[Set[Int]]) =
     var counter = 0
     val nodeAndNumber = scala.collection.mutable.Map.empty[String, Int]
     def getNodeNumber(id: String): Int =
@@ -99,36 +95,29 @@ object PatohPartitions {
     def addNetwork(network: Set[Int]): Unit =
       networks.addOne(network)
     nodes.foreach { currentNode =>
-      if (currentNode.edges.nonEmpty) {
+      if currentNode.edges.nonEmpty then
         val nodeNumber = getNodeNumber(currentNode.id)
 
         val callEdges = currentNode.edges.filter(_.`type` == "CALL")
-        if (callEdges.nonEmpty) {
+        if callEdges.nonEmpty then
           addNetwork(callEdges.map(_.to).map(getNodeNumber).toSet + nodeNumber)
           callEdges.foreach { edge =>
             val to = getNodeNumber(edge.to)
             addNetwork(Set(to, nodeNumber))
           }
-        }
         val declarationEdges = currentNode.edges.filter(_.`type` == "DECLARATION")
-        if (declarationEdges.nonEmpty) {
-          addNetwork(declarationEdges.map(_.to).map(getNodeNumber).toSet + nodeNumber)
-        }
+        if declarationEdges.nonEmpty then addNetwork(declarationEdges.map(_.to).map(getNodeNumber).toSet + nodeNumber)
         val rest = currentNode.edges.filterNot(x => x.`type` == "DECLARATION" || x.`type` == "CALL")
-        if (rest.nonEmpty) {
-          addNetwork(rest.map(_.to).map(getNodeNumber).toSet + nodeNumber)
-        }
-      }
+        if rest.nonEmpty then addNetwork(rest.map(_.to).map(getNodeNumber).toSet + nodeNumber)
     }
 
     (nodeAndNumber, networks.toList)
-  }
 
   private def dumpGraph(
     projectName: String,
     vSize: Int,
     networks: List[Set[Int]]
-  ): Unit = {
+  ): Unit =
     val nSize = networks.size
     val pinsSize = networks.map(_.size).sum
 
@@ -141,5 +130,3 @@ object PatohPartitions {
     }
 
     printer.close()
-  }
-}

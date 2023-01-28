@@ -5,7 +5,7 @@ import org.virtuslab.semanticgraphs.analytics.utils._
 
 import java.io.File
 
-object ExportToGdf {
+object ExportToGdf:
 
   /**
     * Export graph to standard .GDF format, see: https://gephi.org/users/supported-graph-formats/gdf-format/
@@ -13,7 +13,7 @@ object ExportToGdf {
   def exportToGdf(
     outputFileName: String,
     semanticCodeGraph: SemanticCodeGraph
-  ): Unit = {
+  ): Unit =
     val f = new File(outputFileName)
     val printer = new java.io.PrintWriter(f)
 
@@ -24,8 +24,8 @@ object ExportToGdf {
       import node._
       printer.println(
         s"$id, $displayName, $kind, ${location
-          .map(_.uri)
-          .getOrElse("")}, ${properties.get("LOC").map(_.toInt).getOrElse(0)}"
+            .map(_.uri)
+            .getOrElse("")}, ${properties.get("LOC").map(_.toInt).getOrElse(0)}"
       )
     }
     printer.println(
@@ -41,6 +41,3 @@ object ExportToGdf {
     }
 
     printer.close()
-  }
-
-}

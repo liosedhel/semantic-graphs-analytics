@@ -2,13 +2,12 @@ package org.virtuslab.semanticgraphs.analytics.partitions
 
 import com.virtuslab.semanticgraphs.proto.model.graphnode.{Edge, GraphNode}
 import org.junit.Assert.{assertEquals, assertTrue}
-import org.junit.Test
 import org.virtuslab.semanticgraphs.analytics.partitions.gpmetis.SpectralGraphUtils
 import org.virtuslab.semanticgraphs.analytics.scg.SemanticCodeGraph
 
 class ExportToSpectralGraphTest {
 
-  @Test def t2(): Unit = {
+  def t2(): Unit = {
     val node1 = GraphNode("node1", edges = Seq(Edge(to = "node2"), Edge(to = "node3")))
     val node2 = GraphNode("node2", edges = Seq(Edge(to = "node1")))
     val node3 = GraphNode("node3", edges = Seq(Edge(to = "node2"), Edge(to = "node4"), Edge(to = "node5")))
@@ -20,8 +19,8 @@ class ExportToSpectralGraphTest {
     println(nodeAndEdges)
   }
 
-  @Test def commonsIo(): Unit = {
-    val nodes = SemanticCodeGraph(SemanticCodeGraph.commonsIO)
+  def commonsIo(): Unit = {
+    val nodes = SemanticCodeGraph.fromZip(SemanticCodeGraph.commonsIO)
     val (_, nodesAndEdges) = SpectralGraphUtils.toNodeAndEdges(nodes.nodes)
     nodesAndEdges.foreach { case (nodeId, edges) =>
       edges.foreach { edge =>

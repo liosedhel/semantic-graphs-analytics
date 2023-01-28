@@ -9,18 +9,17 @@ import org.virtuslab.semanticgraphs.analytics.utils.MultiPrinter
 import java.io.{File, PrintWriter}
 import java.nio.file.Path
 
-object PartitionHelpers {
+object PartitionHelpers:
 
-  def multiPrinter(projectName: String, method: String): (File, MultiPrinter) = {
+  def multiPrinter(projectName: String, method: String): (File, MultiPrinter) =
     val tmpFolder = new File(Path.of(s"/tmp/$method-$projectName").toUri)
-    if (!tmpFolder.exists()) {
-      tmpFolder.mkdir()
-    }
+    if !tmpFolder.exists() then tmpFolder.mkdir()
     val filePrinter = new PrintWriter(new File(s"${tmpFolder.getAbsolutePath}/$projectName-results.txt"))
     (tmpFolder, new MultiPrinter(filePrinter, new PrintWriter(System.out)))
-  }
 
-  def takeBiggestComponentOnly(semanticCodeGraph: SemanticCodeGraph)(implicit multiPrinter: MultiPrinter): List[GraphNode] = {
+  def takeBiggestComponentOnly(semanticCodeGraph: SemanticCodeGraph)(implicit
+    multiPrinter: MultiPrinter
+  ): List[GraphNode] =
     val stronglyConnectedComponents = JGraphTMetrics.computeConnectedComponents(semanticCodeGraph.graph)
     val nodes = semanticCodeGraph.nodes
     val biggestConnectedGroup = stronglyConnectedComponents.groupBy(_._2).maxBy(_._2.keys.size)._2
@@ -28,13 +27,12 @@ object PartitionHelpers {
       s"Biggest strongly connected group size: ${biggestConnectedGroup.size}, total nodes ${nodes.size}, ${biggestConnectedGroup.size * 100 / nodes.size}%"
     )
     nodes.filter(n => biggestConnectedGroup.isDefinedAt(n.id)).toList
-  }
 
   def dumpCsv(
     projectName: String,
     nodes: List[GraphNode],
     nodeToIndex: scala.collection.mutable.Map[String, Int]
-  ): Unit = {
+  ): Unit =
     val csvLines = nodes
       .collect {
         case node if nodeToIndex.contains(node.id) =>
@@ -53,14 +51,13 @@ object PartitionHelpers {
       printer.println(line)
     }
     printer.close()
-  }
 
   def exportAllToGDF(
     maxNParts: Int,
     nodes: List[GraphNode],
     outputFileName: String,
     partitionResults: List[PartitionResults]
-  ): Unit = {
+  ): Unit =
     val f = new File(outputFileName)
     val printer = new java.io.PrintWriter(f)
 
@@ -76,7 +73,7 @@ object PartitionHelpers {
       import node._
       printer.println(
         s"$id, $displayName, $kind, ${location.map(_.uri).getOrElse("")}, ${properties.get("LOC").map(_.toInt).getOrElse(0)}, ${properties
-          .getOrElse("package", "__empty__")}, $printResult"
+            .getOrElse("package", "__empty__")}, $printResult"
       )
     }
     printer.println(
@@ -92,14 +89,13 @@ object PartitionHelpers {
     }
 
     printer.close()
-  }
 
   def exportToGdf(
     outputFileName: String,
     nodes: List[GraphNode],
     nodeToPartMap: Map[String, Int],
     connectedComponents: Map[String, Int]
-  ): Unit = {
+  ): Unit =
     val f = new File(outputFileName)
     val printer = new java.io.PrintWriter(f)
 
@@ -110,9 +106,9 @@ object PartitionHelpers {
       import node._
       printer.println(
         s"$id, $displayName, $kind, ${location
-          .map(_.uri)
-          .getOrElse("")}, ${properties.get("LOC").map(_.toInt).getOrElse(0)}, ${nodeToPartMap(node.id)}, ${properties
-          .getOrElse("package", "__empty__")}, ${connectedComponents(node.id)}"
+            .map(_.uri)
+            .getOrElse("")}, ${properties.get("LOC").map(_.toInt).getOrElse(0)}, ${nodeToPartMap(node.id)}, ${properties
+            .getOrElse("package", "__empty__")}, ${connectedComponents(node.id)}"
       )
     }
     printer.println(
@@ -128,6 +124,3 @@ object PartitionHelpers {
     }
 
     printer.close()
-  }
-
-}
