@@ -1,62 +1,84 @@
 package org.virtuslab.semanticgraphs.analytics.summary
 
-import scala.jdk.CollectionConverters._
-import io.circe.generic.auto._
-import io.circe.syntax._
+import scala.jdk.CollectionConverters.*
+import io.circe.generic.auto.*
+import io.circe.syntax.*
 import org.virtuslab.semanticgraphs.analytics.crucial.{CrucialNodes, ProjectScoringSummary}
 import org.virtuslab.semanticgraphs.analytics.metrics.JGraphTMetrics
-import org.virtuslab.semanticgraphs.analytics.scg.SemanticCodeGraph
+import org.virtuslab.semanticgraphs.analytics.scg.{ProjectAndVersion, SemanticCodeGraph}
 import org.virtuslab.semanticgraphs.analytics.utils.JsonUtils
 
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
+
+case class NodeKindAndNumber(kind: String, number: Int)
+case class EdgeTypeAndNumber(`type`: String, number: Int)
+case class SCGProjectSummary(
+  name: String,
+  version: String,
+  nodes: Int,
+  edges: Int,
+  nodesDistribution: List[NodeKindAndNumber],
+  edgesDistribution: List[EdgeTypeAndNumber],
+  density: Double,
+  averageInDegree: Double,
+  averageOutDegree: Double,
+  globalClusteringCoefficient: Double,
+  assortativityCoefficient: Double,
+  totalLoc: Long
+)
+
+object SCGProjectSummary:
+  def summary(scg: SemanticCodeGraph) =
+    val semanticCodeGraph = scg.withoutZeroDegreeNodes()
+    val nodesTotal = semanticCodeGraph.graph.vertexSet().size()
+    val edgesTotal = semanticCodeGraph.graph.edgeSet().size()
+
+    val edgeDistribution = semanticCodeGraph.graph
+      .edgeSet()
+      .asScala
+      .toList
+      .map(_.role)
+      .groupBy(identity)
+      .map { case (role, set) => EdgeTypeAndNumber(role, set.size) }
+      .toList
+      .sortBy(-_.number)
+    val nodesDistribution = semanticCodeGraph.nodes
+      .map(_.kind)
+      .groupBy(identity)
+      .map { case (kind, set) => NodeKindAndNumber(kind, set.size) }
+      .toList
+      .sortBy(-_.number)
+
+    val density = JGraphTMetrics.density(semanticCodeGraph.graph)
+
+    val averageInDegree = JGraphTMetrics.averageInDegree(semanticCodeGraph.graph)
+    val averageOutDegree = JGraphTMetrics.averageOutDegree(semanticCodeGraph.graph)
+    val globalClusteringCoefficient = JGraphTMetrics.globalClusteringCoefficient(semanticCodeGraph.graph)
+    val assortativityCoefficient = JGraphTMetrics.assortativityCoefficient2(semanticCodeGraph.graph)
+    val totalLoc = SemanticCodeGraph.readLOC(semanticCodeGraph.projectAndVersion)
+
+    SCGProjectSummary(
+      name = semanticCodeGraph.projectName,
+      version = semanticCodeGraph.version,
+      nodes = nodesTotal,
+      edges = edgesTotal,
+      nodesDistribution = nodesDistribution,
+      edgesDistribution = edgeDistribution,
+      density = density,
+      averageInDegree = averageInDegree,
+      averageOutDegree = averageOutDegree,
+      globalClusteringCoefficient = globalClusteringCoefficient,
+      assortativityCoefficient = assortativityCoefficient,
+      totalLoc = totalLoc
+    )
 
 object SCGBasedProjectSummary extends App:
 
   val projects = SemanticCodeGraph.readAllProjects() ++ SemanticCodeGraph.readAllProjectsCallGraph()
 
   def exportSummary(): Unit =
-    case class NodeKindAndNumber(kind: String, number: Int)
-    case class EdgeTypeAndNumber(`type`: String, number: Int)
-    case class SCGProjectSummary(
-      name: String,
-      version: String,
-      nodes: Int,
-      edges: Int,
-      nodesDistribution: List[NodeKindAndNumber],
-      edgesDistribution: List[EdgeTypeAndNumber]
-    )
-    val summary = projects.map { semanticCodeGraph =>
-
-      val nodesTotal = semanticCodeGraph.graph.vertexSet().size()
-      val edgesTotal = semanticCodeGraph.graph.edgeSet().size()
-
-      val edgeDistribution = semanticCodeGraph.graph
-        .edgeSet()
-        .asScala
-        .toList
-        .map(_.role)
-        .groupBy(identity)
-        .map { case (role, set) => EdgeTypeAndNumber(role, set.size) }
-        .toList
-        .sortBy(-_.number)
-      val nodesDistribution = semanticCodeGraph.nodes
-        .map(_.kind)
-        .groupBy(identity)
-        .map { case (kind, set) => NodeKindAndNumber(kind, set.size) }
-        .toList
-        .sortBy(-_.number)
-
-      SCGProjectSummary(
-        semanticCodeGraph.project,
-        semanticCodeGraph.version,
-        nodesTotal,
-        edgesTotal,
-        nodesDistribution,
-        edgeDistribution
-      )
-    }
-
+    val summary = projects.map(SCGProjectSummary.summary)
     JsonUtils.dumpJsonFile("summary.json", summary.asJson.spaces2)
 
   def printSummaryLatexTable() =
@@ -72,19 +94,21 @@ object SCGBasedProjectSummary extends App:
       val averageOutDegree = JGraphTMetrics.averageOutDegree(semanticCodeGraph.graph)
       val globalClusteringCoefficient = JGraphTMetrics.globalClusteringCoefficient(semanticCodeGraph.graph)
       val assortativityCoefficient = JGraphTMetrics.assortativityCoefficient2(semanticCodeGraph.graph)
-      val totalLoc = SemanticCodeGraph.readLOCFromZip(semanticCodeGraph.projectAndVersion)
+      val totalLoc = SemanticCodeGraph.readLOC(semanticCodeGraph.projectAndVersion)
 
       println(
-        f"${semanticCodeGraph.project} & ${semanticCodeGraph.version} & $totalLoc & $nodesTotal & $edgesTotal & $density%1.5f & $averageOutDegree%1.3f & $averageInDegree%1.3f & $globalClusteringCoefficient%1.2f & $assortativityCoefficient%1.4f\\\\"
+        f"${semanticCodeGraph.projectName} & ${semanticCodeGraph.version} & $totalLoc & $nodesTotal & $edgesTotal & $density%1.5f & $averageOutDegree%1.3f & $averageInDegree%1.3f & $globalClusteringCoefficient%1.2f & $assortativityCoefficient%1.4f\\\\"
       )
     }
-
     println()
 
   exportSummary()
   printSummaryLatexTable()
 
-object ComputeProjectSummary extends App {
+end SCGBasedProjectSummary
+
+
+object ComputeProjectSummary extends App:
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -93,8 +117,8 @@ object ComputeProjectSummary extends App {
       Future {
         CrucialNodes.analyze(project, filePrefix)
       }.recover { case e =>
-        println(s"Exception for ${project.project} ${e.getMessage}")
-        ProjectScoringSummary(project.project, project.projectAndVersion.workspace, Nil, Nil)
+        println(s"Exception for ${project.projectName} ${e.getMessage}")
+        ProjectScoringSummary(project.projectName, project.projectAndVersion.workspace, Nil, Nil)
       }
     })
 
@@ -123,4 +147,3 @@ object ComputeProjectSummary extends App {
     printStats(fullR)
 
   Await.result(whole, Duration.Inf)
-}

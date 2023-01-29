@@ -5,3 +5,6 @@
 .vscode
 target
 .semanticgraphs
+*.json
+.scala-build
+.java-version

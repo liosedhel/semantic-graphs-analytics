@@ -124,38 +124,35 @@ object PartitionResults:
       }
     }
 
-    multiPrinter.println("Overall arithmetic average accuracy")
+    val nodesSize = results.head.nodes.size
+    multiPrinter.println("Partitioned project comparison")
     multiPrinter.println(
-      "|Method |NPart|Weighted|Accuracy|Weighted|Accuracy|Variance|Modularity|Coefficient|Distribution"
+      "________________________________________________________________________________________________"
     )
-    val size = results.head.nodes.size
-    results
-      .foreach { result =>
-        val x = result.fileDistribution
-        val y = result.packageDistribution
-        multiPrinter.println(
-          f"|${result.method.padTo(7, ' ')}|${x.nparts}%5d|${y.weightedAverageAccuracy}%7d%%|${y.arithmeticAverageAccuracy}%7d%%|${x.weightedAverageAccuracy}%7d%%|${x.arithmeticAverageAccuracy}%7d%%|${result.distributionVariance}%8.3f|${result.modularityRatio}%10.3f|${result.clusteringCoefficient}%11.3f| [${result.globalNodesDistribution
-              .map(i => i * 100 / size)
-              .mkString(",")}]%%"
-        )
-      }
-
-    multiPrinter.println("|       |     |          |           |File             |Package          |            ")
+    multiPrinter.println(
+      "|       |     |          |           |File             |Package          |        |            |"
+    )
     multiPrinter.println(
       "|Method |NPart|Modularity|Coefficient|Weighted|Accuracy|Weighted|Accuracy|Variance|Distribution"
     )
+    multiPrinter.println(
+      "-----------------------------------------------------------------------------------------------|"
+    )
     results.foreach(printDistributionResult)
+    multiPrinter.println(
+      "|----------------------------------------------------------------------------------------------|"
+    )
 
     def printDistributionResult(result: PartitionResults) =
       val file = result.fileDistribution
       val _package = result.packageDistribution
       multiPrinter.println(
-        f"|${result.method.padTo(7, ' ')}|${result.nparts}%5d|${result.modularityRatio}%10.3f|${result.clusteringCoefficient}%11.3f|${file.weightedAverageAccuracy}%7d%%|${file.arithmeticAverageAccuracy}%7d%%|${_package.weightedAverageAccuracy}%7d%%|${_package.arithmeticAverageAccuracy}%7d%%|${result.distributionVariance}%8.3f|[${result.globalNodesDistribution
-            .map(i => i * 100 / size)
-            .mkString(",")}]%%"
+        f"|${result.method.padTo(7, ' ')}|${result.nparts}%5d|${result.modularityRatio}%10.3f|${result.clusteringCoefficient}%11.3f|" +
+          f"${file.weightedAverageAccuracy}%7d%%|${file.arithmeticAverageAccuracy}%7d%%|${_package.weightedAverageAccuracy}%7d%%|${_package.arithmeticAverageAccuracy}%7d%%|" +
+          f"${result.distributionVariance}%8.3f|[${result.globalNodesDistribution.map(i => i * 100 / nodesSize).mkString(",")}]%%"
       )
 
-case class GroupPartitionStats(partitionName: String, distribution: List[Int]) extends Comparable[GroupPartitionStats] {
+case class GroupPartitionStats(partitionName: String, distribution: List[Int]) extends Comparable[GroupPartitionStats]:
 
   val (maxValue, partition) = distribution.zipWithIndex.maxBy(_._1)
   val accuracy = maxValue * 100 / distribution.sum
@@ -165,4 +162,3 @@ case class GroupPartitionStats(partitionName: String, distribution: List[Int]) e
 
   override def toString: String =
     s"$partition - $partitionName -> $distribution $accuracy%"
-}

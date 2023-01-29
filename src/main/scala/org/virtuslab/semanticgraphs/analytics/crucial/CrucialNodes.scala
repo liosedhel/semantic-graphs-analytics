@@ -37,11 +37,15 @@ case class ProjectScoringSummary(
 
 object CrucialNodes:
 
+  def analyze(semanticCodeGraph: SemanticCodeGraph): ProjectScoringSummary =
+    val jGraphTExporter = new JGraphTAnalyzer(semanticCodeGraph)
+    jGraphTExporter.computeStatistics(semanticCodeGraph.projectName, semanticCodeGraph.projectAndVersion.workspace)
+
   def analyze(semanticCodeGraph: SemanticCodeGraph, filePrefix: String): ProjectScoringSummary =
     val jGraphTExporter = new JGraphTAnalyzer(semanticCodeGraph)
     val stats =
-      jGraphTExporter.computeStatistics(semanticCodeGraph.project, semanticCodeGraph.projectAndVersion.workspace)
-    val outputFile = s"$filePrefix-stats-${semanticCodeGraph.project}.crucial.json"
+      jGraphTExporter.computeStatistics(semanticCodeGraph.projectName, semanticCodeGraph.projectAndVersion.workspace)
+    val outputFile = s"$filePrefix-stats-${semanticCodeGraph.projectName}.crucial.json"
     JsonUtils.dumpJsonFile(outputFile, stats.asJson.toString)
     println(s"Results exported to: $outputFile")
     stats
@@ -49,7 +53,7 @@ object CrucialNodes:
 object CrucialNodesApp extends App:
   val workspace = args(0)
   val projectName = workspace.split("/").last
-  val scg = SemanticCodeGraph.fromZip(ProjectAndVersion(workspace, workspace.split("/").last, ""))
+  val scg = SemanticCodeGraph.read(ProjectAndVersion(workspace, workspace.split("/").last, ""))
   CrucialNodes.analyze(scg, projectName)
 
 object CrucialNodesAnalyzeAll extends App:

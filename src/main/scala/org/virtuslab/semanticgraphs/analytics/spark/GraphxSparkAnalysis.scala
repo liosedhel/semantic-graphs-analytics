@@ -16,7 +16,7 @@ object GraphxSparkAnalysis extends App:
   var counter = 0L
   val stringToIntMap = scala.collection.mutable.Map.empty[String, Long]
   val rawNodes =
-    scg.SemanticCodeGraph.fromZip(projectToAnalyse).withoutZeroDegreeNodes().nodesMap.toSeq.map { case (key, node) =>
+    scg.SemanticCodeGraph.read(projectToAnalyse).withoutZeroDegreeNodes().nodesMap.toSeq.map { case (key, node) =>
       val id = counter
       stringToIntMap.update(key, id)
       counter += 1

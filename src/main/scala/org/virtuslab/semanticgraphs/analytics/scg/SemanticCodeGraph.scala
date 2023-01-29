@@ -13,7 +13,7 @@ class SemanticCodeGraph(
   val projectAndVersion: ProjectAndVersion,
   val nodesMap: Map[String, GraphNode]
 ):
-  def project: String = projectAndVersion.projectName
+  def projectName: String = projectAndVersion.projectName
   def version: String = projectAndVersion.version
 
   lazy val nodes: Iterable[GraphNode] = nodesMap.values
@@ -45,11 +45,11 @@ case class ProjectAndVersion(workspace: String, projectName: String, version: St
 
 object SemanticCodeGraph:
 
-  val commonsIO = ProjectAndVersion("data/commons-io", "commons-io", "2.12.0")
-  val metals = ProjectAndVersion("data/metals", "metals", "0.10.3")
-  val springBoot = ProjectAndVersion("data/spring-boot", "spring-boot", "2.7.5")
-  val akka = ProjectAndVersion("data/akka", "akka", "2.7.0")
-  val spark = ProjectAndVersion("data/spark", "spark", "3.3.0")
+  val commonsIO = ProjectAndVersion("data/commons-io.zip", "commons-io", "2.12.0")
+  val metals = ProjectAndVersion("data/metals.zip", "metals", "0.10.3")
+  val springBoot = ProjectAndVersion("data/spring-boot.zip", "spring-boot", "2.7.5")
+  val akka = ProjectAndVersion("data/akka.zip", "akka", "2.7.0")
+  val spark = ProjectAndVersion("data/spark.zip", "spark", "3.3.0")
 
   val allProjects = List(commonsIO, metals, springBoot, akka, spark)
 
@@ -77,14 +77,14 @@ object SemanticCodeGraph:
     * @param workspace
     */
   def fetchCallGraph(projectAndVersion: ProjectAndVersion) =
-    SemanticCodeGraph.fromZip(
+    SemanticCodeGraph.read(
       projectAndVersion,
       node => isNodeDefinedInProject(node) && node.kind == "METHOD",
       edge => isEdgeDefinedInProject(edge) && edge.`type` == "CALL"
     )
 
   def fetchFullCallGraph(projectAndVersion: ProjectAndVersion) =
-    SemanticCodeGraph.fromZip(
+    SemanticCodeGraph.read(
       projectAndVersion,
       node =>
         isNodeDefinedInProject(
@@ -94,13 +94,22 @@ object SemanticCodeGraph:
     )
 
   def readOnlyGlobalNodes(projectAndVersion: ProjectAndVersion): SemanticCodeGraph =
-    val semanticCodeGraph = SemanticCodeGraph.fromZip(
+    val semanticCodeGraph = SemanticCodeGraph.read(
       projectAndVersion,
       nodeFilter = node => SemanticCodeGraph.isNodeDefinedInProject(node) && SemanticCodeGraph.notLocal(node)
     )
     semanticCodeGraph.withoutZeroDegreeNodes()
 
-  def fromDir(
+  def read(
+    projectAndVersion: ProjectAndVersion,
+    nodeFilter: GraphNode => Boolean = SemanticCodeGraph.isNodeDefinedInProject,
+    edgeFilter: Edge => Boolean = SemanticCodeGraph.isEdgeDefinedInProject
+  ) = {
+    if projectAndVersion.workspace.endsWith(".zip") then fromZip(projectAndVersion, nodeFilter, edgeFilter)
+    else fromDir(projectAndVersion, nodeFilter, edgeFilter)
+  }
+
+  private def fromDir(
     projectAndVersion: ProjectAndVersion,
     nodeFilter: GraphNode => Boolean = SemanticCodeGraph.isNodeDefinedInProject,
     edgeFilter: Edge => Boolean = SemanticCodeGraph.isEdgeDefinedInProject
@@ -123,14 +132,14 @@ object SemanticCodeGraph:
       } // filter out edges pointing to outside nodes
     new SemanticCodeGraph(projectAndVersion, nodesMap.toMap)
 
-  def fromZip(
+  private def fromZip(
     projectAndVersion: ProjectAndVersion,
     nodeFilter: GraphNode => Boolean = SemanticCodeGraph.isNodeDefinedInProject,
     edgeFilter: Edge => Boolean = SemanticCodeGraph.isEdgeDefinedInProject
   ): SemanticCodeGraph =
     lazy val nodesMap: scala.collection.mutable.Map[String, GraphNode] =
       val map = scala.collection.mutable.Map.empty[String, GraphNode]
-      val zipFile = new ZipFile(s"${projectAndVersion.workspace}.zip")
+      val zipFile = new ZipFile(s"${projectAndVersion.workspace}")
       val entries = zipFile.getEntries
       entries.asIterator().forEachRemaining { entry =>
         if !entry.isDirectory && entry.getName.endsWith(".semanticgraphdb") then
@@ -145,7 +154,13 @@ object SemanticCodeGraph:
       } // filter out edges pointing to outside nodes
     new SemanticCodeGraph(projectAndVersion, nodesMap.toMap)
 
-  def readLOCFromDir(
+
+  def readLOC(
+    projectAndVersion: ProjectAndVersion
+  ): Long =
+    if projectAndVersion.projectName.endsWith(".zip") then readLOCFromZip(projectAndVersion) else readLOCFromDir(projectAndVersion)
+
+  private def readLOCFromDir(
     projectAndVersion: ProjectAndVersion
   ): Long =
     var loc = 0L
@@ -163,13 +178,13 @@ object SemanticCodeGraph:
       }
     loc
 
-  def readLOCFromZip(
+  private def readLOCFromZip(
     projectAndVersion: ProjectAndVersion
   ): Long =
     var loc = 0L
     val dir = projectAndVersion.workspace.resolve(".semanticgraphs")
 
-    val zipFile = new ZipFile(s"${projectAndVersion.workspace}.zip")
+    val zipFile = new ZipFile(s"${projectAndVersion.workspace}")
     val entries = zipFile.getEntries
     entries.asIterator().forEachRemaining { entry =>
       if !entry.isDirectory && entry.getName.endsWith(".semanticgraphdb") then

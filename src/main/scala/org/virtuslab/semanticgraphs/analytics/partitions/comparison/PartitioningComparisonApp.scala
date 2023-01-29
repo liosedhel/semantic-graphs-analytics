@@ -7,16 +7,15 @@ import org.virtuslab.semanticgraphs.analytics.scg.{ProjectAndVersion, SemanticCo
 
 object PartitioningComparisonApp:
 
-  @main
-  def runPartitionComparison(workspace: String, nparts: Int) =
-    val projectName = workspace.split("/").last
+  def runPartitionComparison(projectAndVersion: ProjectAndVersion, nparts: Int) =
+    val projectName = projectAndVersion.projectName
 
     val (comparisonTmp, comparisonPrinter) = PartitionHelpers.multiPrinter(projectName, "comparison")
-    comparisonPrinter.println(s"Computing graph $workspace, $nparts with project name $projectName")
+    comparisonPrinter.println(s"Computing graph ${projectAndVersion.workspace}, $nparts with project name $projectName")
 
     val biggestComponentNodes =
       PartitionHelpers.takeBiggestComponentOnly(
-        SemanticCodeGraph.readOnlyGlobalNodes(ProjectAndVersion(workspace, projectName, ""))
+        SemanticCodeGraph.readOnlyGlobalNodes(projectAndVersion)
       )(comparisonPrinter)
 
     val gpmetisResults = GpmetisPartitions.partition(biggestComponentNodes, projectName, nparts)(comparisonPrinter)
