@@ -20,7 +20,7 @@ object PatohClustering extends App:
   val biggestComponentNodes =
     PartitionHelpers.takeBiggestComponentOnly(
       SemanticCodeGraph.readOnlyGlobalNodes(ProjectAndVersion(workspace, projectName, ""))
-    )(multiPrinter)
+    )
 
   val results = PatohPartitions.partition(biggestComponentNodes, projectName, nparts)
 
@@ -38,19 +38,14 @@ object PatohClustering extends App:
 
 object PatohPartitions:
 
-  def partition(nodes: List[GraphNode], projectName: String, nparts: Int)(implicit
-    multiPrinter: MultiPrinter
-  ): List[PartitionResults] =
+  def partition(nodes: List[GraphNode], projectName: String, nparts: Int): List[PartitionResults] =
     val indexes = PatohPartitions.exportPatohInputGraph(projectName, nodes)
     val result = computePatohPartitioning(nodes, indexes, nparts, projectName)
     new File(s"$projectName.patoh").delete()
     result
 
-  def computePatohPartitioning(nodes: List[GraphNode], indexes: Array[String], nparts: Int, projectName: String)(
-    implicit multiPrinter: MultiPrinter
-  ): List[PartitionResults] =
+  def computePatohPartitioning(nodes: List[GraphNode], indexes: Array[String], nparts: Int, projectName: String): List[PartitionResults] =
     if nparts > 1 then
-      multiPrinter.println(s"Running patoh parts=$nparts")
       val computing =
         os.proc("patoh", s"$projectName.patoh", nparts, "IB=0.5", "PA=11")
           .call()

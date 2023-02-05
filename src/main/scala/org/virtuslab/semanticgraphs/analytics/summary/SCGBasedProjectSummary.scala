@@ -8,6 +8,7 @@ import org.virtuslab.semanticgraphs.analytics.metrics.JGraphTMetrics
 import org.virtuslab.semanticgraphs.analytics.scg.{ProjectAndVersion, SemanticCodeGraph}
 import org.virtuslab.semanticgraphs.analytics.utils.JsonUtils
 
+import java.nio.file.{Files, Path, StandardCopyOption}
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
@@ -29,7 +30,7 @@ case class SCGProjectSummary(
 )
 
 object SCGProjectSummary:
-  def summary(scg: SemanticCodeGraph) =
+  def summary(scg: SemanticCodeGraph): SCGProjectSummary =
     val semanticCodeGraph = scg.withoutZeroDegreeNodes()
     val nodesTotal = semanticCodeGraph.graph.vertexSet().size()
     val edgesTotal = semanticCodeGraph.graph.edgeSet().size()
@@ -72,6 +73,28 @@ object SCGProjectSummary:
       assortativityCoefficient = assortativityCoefficient,
       totalLoc = totalLoc
     )
+
+  import io.circe.generic.auto.*
+  import io.circe.syntax.*
+
+  def exportHtmlSummary(summary: SCGProjectSummary): Unit = {
+    exportJsSummary("summary.js", summary)
+    copySummaryHtml(Path.of("."))
+  }
+
+  private def exportJsSummary(fileName: String, summary: SCGProjectSummary): Unit = {
+    import java.io._
+    val pw = new PrintWriter(new File(fileName))
+    val json = s"const summary = ${summary.asJson.spaces2};"
+    pw.write(json)
+    pw.close()
+  }
+
+  private def copySummaryHtml(summaryResultDirectory: Path): Unit = {
+    val inputStream = getClass.getClassLoader.getResourceAsStream("summary.html")
+    Files.copy(inputStream, summaryResultDirectory.resolve("summary.html"), StandardCopyOption.REPLACE_EXISTING)
+    inputStream.close()
+  }
 
 object SCGBasedProjectSummary extends App:
 

@@ -17,15 +17,10 @@ object PartitionHelpers:
     val filePrinter = new PrintWriter(new File(s"${tmpFolder.getAbsolutePath}/$projectName-results.txt"))
     (tmpFolder, new MultiPrinter(filePrinter, new PrintWriter(System.out)))
 
-  def takeBiggestComponentOnly(semanticCodeGraph: SemanticCodeGraph)(implicit
-    multiPrinter: MultiPrinter
-  ): List[GraphNode] =
+  def takeBiggestComponentOnly(semanticCodeGraph: SemanticCodeGraph): List[GraphNode] =
     val stronglyConnectedComponents = JGraphTMetrics.computeConnectedComponents(semanticCodeGraph.graph)
     val nodes = semanticCodeGraph.nodes
     val biggestConnectedGroup = stronglyConnectedComponents.groupBy(_._2).maxBy(_._2.keys.size)._2
-    multiPrinter.println(
-      s"Biggest strongly connected group size: ${biggestConnectedGroup.size}, total nodes ${nodes.size}, ${biggestConnectedGroup.size * 100 / nodes.size}%"
-    )
     nodes.filter(n => biggestConnectedGroup.isDefinedAt(n.id)).toList
 
   def dumpCsv(

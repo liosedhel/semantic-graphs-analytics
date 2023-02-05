@@ -20,7 +20,7 @@ class ExportToSpectralGraphTest {
   }
 
   def commonsIo(): Unit = {
-    val nodes = SemanticCodeGraph.fromZip(SemanticCodeGraph.commonsIO)
+    val nodes = SemanticCodeGraph.read(SemanticCodeGraph.commonsIO)
     val (_, nodesAndEdges) = SpectralGraphUtils.toNodeAndEdges(nodes.nodes)
     nodesAndEdges.foreach { case (nodeId, edges) =>
       edges.foreach { edge =>

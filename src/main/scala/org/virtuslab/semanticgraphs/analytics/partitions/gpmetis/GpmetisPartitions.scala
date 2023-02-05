@@ -19,7 +19,7 @@ object GpmetisPartitionsApp extends App:
   val biggestComponentNodes =
     PartitionHelpers.takeBiggestComponentOnly(
       SemanticCodeGraph.readOnlyGlobalNodes(ProjectAndVersion(workspace, projectName, ""))
-    )(multiPrinter)
+    )
 
   val results = GpmetisPartitions.partition(biggestComponentNodes, projectName, nparts)
 
@@ -46,17 +46,13 @@ object GpmetisPartitionsApp extends App:
 
 object GpmetisPartitions:
 
-  def partition(nodes: List[GraphNode], projectName: String, nparts: Int)(implicit
-    multiPrinter: MultiPrinter
-  ): List[PartitionResults] =
+  def partition(nodes: List[GraphNode], projectName: String, nparts: Int): List[PartitionResults] =
     val indexes = SpectralGraphUtils.exportToSpectralGraph(projectName, nodes)
     val result = GpmetisPartitions.computePartitioning(nodes, indexes, nparts, projectName)
     new File(s"$projectName.gpmetis").delete()
     result
 
-  def computePartitioning(nodes: List[GraphNode], indexes: Array[String], nparts: Int, projectName: String)(implicit
-    multiPrinter: MultiPrinter
-  ): List[PartitionResults] =
+  def computePartitioning(nodes: List[GraphNode], indexes: Array[String], nparts: Int, projectName: String): List[PartitionResults] =
     if nparts > 1 then
       val computing =
         os.proc("gpmetis", "-ptype=kway", "-contig", "-objtype=cut", "-ufactor=1000", s"$projectName.gpmetis", nparts)

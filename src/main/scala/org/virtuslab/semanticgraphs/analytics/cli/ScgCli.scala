@@ -2,15 +2,17 @@ package org.virtuslab.semanticgraphs.analytics.cli
 
 import org.virtuslab.semanticgraphs.analytics.partitions.comparison.PartitioningComparisonApp
 import org.virtuslab.semanticgraphs.analytics.scg.{ProjectAndVersion, SemanticCodeGraph}
-import org.virtuslab.semanticgraphs.analytics.utils.JsonUtils
+import org.virtuslab.semanticgraphs.analytics.utils.{JsonUtils, MultiPrinter}
 import org.virtuslab.semanticgraphs.analytics.summary.SCGProjectSummary
 import io.circe.generic.auto.*
 import io.circe.syntax.*
 import org.virtuslab.semanticgraphs.analytics.crucial.CrucialNodes
+import org.virtuslab.semanticgraphs.analytics.partitions.PartitionResults
 import picocli.CommandLine
 import picocli.CommandLine.{Command, HelpCommand, Parameters}
 import picocli.CommandLine.Model.CommandSpec
 
+import java.io.{File, PrintWriter}
 import java.util.Locale
 
 @Command(
@@ -60,19 +62,18 @@ class ScgCli:
     )
     workspace: String
   ): Unit =
-    val summary = SCGProjectSummary.summary(
-      SemanticCodeGraph.read(ProjectAndVersion(workspace, workspace.split("/").last, ""))
-    )
-    println(summary.asJson.spaces2)
+    val scg = SemanticCodeGraph.read(ProjectAndVersion(workspace, workspace.split("/").last, ""))
+    val summary = SCGProjectSummary.summary(scg)
+    SCGProjectSummary.exportHtmlSummary(summary)
 
   @Command(name = "crucial", description = Array("Find crucial code entities"))
   def crucial(
-     @Parameters(
-       paramLabel = "<workspace>",
-       description = Array("Workspace where SCG proto files are located in .semanticgraphs directory or zipped archive")
-     )
-     workspace: String
-   ): Unit =
+    @Parameters(
+      paramLabel = "<workspace>",
+      description = Array("Workspace where SCG proto files are located in .semanticgraphs directory or zipped archive")
+    )
+    workspace: String
+  ): Unit =
     val scg = SemanticCodeGraph.read(ProjectAndVersion(workspace, workspace.split("/").last, ""))
     val projectScoringSummary = CrucialNodes.analyze(scg)
     val outputFile = s"${scg.projectName}.crucial.json"
@@ -89,9 +90,16 @@ class ScgCli:
     @Parameters(paramLabel = "<nparts>", description = Array("Up to how many partitions split the project"))
     nparts: Int
   ): Unit =
-    PartitioningComparisonApp.runPartitionComparison(
+    val results = PartitioningComparisonApp.runPartitionComparison(
       ProjectAndVersion(workspace, workspace.split("/").last, ""),
       nparts
+    )
+    PartitionResults.print(
+      new MultiPrinter(
+        new PrintWriter(System.out),
+        new PrintWriter(new PrintWriter(new File(s"${workspace.replace("/", "-")}.partition.txt")))
+      ),
+      results
     )
 
 object ScgCli:
