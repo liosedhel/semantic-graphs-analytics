@@ -1,4 +1,4 @@
-val scala2Version = "3.2.1"
+val scala3Version = "3.2.1"
 
 lazy val root = project
   .in(file("."))
@@ -7,7 +7,7 @@ lazy val root = project
     name := "semantic-graphs-analytics",
     organization := "com.virtuslab.semanticgraphs",
     version := "0.1.0-SNAPSHOT",
-    scalaVersion := scala2Version,
+    scalaVersion := scala3Version,
     Compile / PB.targets := Seq(
       scalapb.gen() -> (Compile / sourceManaged).value
     ),
@@ -29,6 +29,26 @@ lazy val root = project
     excludeDependencies += "org.typelevel" % "cats-kernel_2.13",
       // https://mvnrepository.com/artifact/info.picocli/picocli
     libraryDependencies += "info.picocli" % "picocli" % "4.7.0"
+).aggregate(javaparser, parsercommons).dependsOn(javaparser)
 
+lazy val javaparser = project.in(file("javaparser")).settings(
+  scalaVersion := scala3Version,
+  Compile / PB.targets := Seq(
+    scalapb.gen() -> (Compile / sourceManaged).value
+  ),
+  libraryDependencies += "com.github.javaparser" % "javaparser-core" % "3.24.0",
+  libraryDependencies += "com.github.javaparser" % "javaparser-symbol-solver-core" % "3.24.0"
+).dependsOn(parsercommons).aggregate(parsercommons)
 
+lazy val parsercommons = project.in(file("parsercommons")).settings(
+  scalaVersion := scala3Version,
+  Compile / PB.targets := Seq(
+    scalapb.gen() -> (Compile / sourceManaged).value
+  ),
+  libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.2.10",
+  libraryDependencies += "com.typesafe.scala-logging" % "scala-logging_3" % "3.9.4",
+  libraryDependencies += "com.typesafe.play" % "play-json_3" % "2.10.0-RC5",
+  libraryDependencies += "com.typesafe" % "config" % "1.4.2",
+  libraryDependencies += "org.eclipse.jgit" % "org.eclipse.jgit" % "6.0.0.202111291000-r",
+  libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.10" % Test
 )

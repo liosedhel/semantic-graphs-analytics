@@ -9,4 +9,4 @@ target
 .scala-build
 .java-version
 *.txt
-
+.DS_Store

@@ -1,5 +1,8 @@
 package org.virtuslab.semanticgraphs.analytics.cli
 
+import ch.qos.logback.classic.Logger
+import com.virtuslab.semanticgraphs.javaparser.JavaParserMain
+import com.virtuslab.semanticgraphs.parsercommon.logger.LoggerFactory
 import org.virtuslab.semanticgraphs.analytics.partitions.comparison.PartitioningComparisonApp
 import org.virtuslab.semanticgraphs.analytics.scg.{ProjectAndVersion, SemanticCodeGraph}
 import org.virtuslab.semanticgraphs.analytics.utils.{JsonUtils, MultiPrinter}
@@ -16,43 +19,23 @@ import java.io.{File, PrintWriter}
 import java.util.Locale
 
 @Command(
-  name = "iso-code-resolver",
-  subcommands = Array(classOf[SubcommandAsClass], classOf[HelpCommand]),
-  description = Array("Resolves ISO country codes (ISO-3166-1) or language codes (ISO 639-1/-2)")
-)
-class ISOCodeResolver:
-  val spec: CommandSpec = null
-
-  @Command(name = "country", description = Array("Resolves ISO country codes (ISO-3166-1)"))
-  def subCommandViaMethod(
-    @Parameters(
-      arity = "1..*",
-      paramLabel = "<countryCode>",
-      description = Array("country code(s) to be resolved")
-    ) countryCodes: Array[String]
-  ): Unit =
-    for code <- countryCodes do println(s"${code.toUpperCase()}: ".concat(new Locale("", code).getDisplayCountry))
-
-@Command(name = "language", description = Array("Resolves language codes (ISO-639-1/-2)"))
-class SubcommandAsClass extends Runnable:
-  @Parameters(arity = "1..*", paramLabel = "<languageCode>", description = Array("language code(s)"))
-  private val languageCodes = new Array[String](0)
-
-  override def run(): Unit =
-    for code <- languageCodes do println(s"${code.toUpperCase()}: ".concat(new Locale(code).getDisplayLanguage))
-
-object ISOCodeResolver:
-
-  def main(args: Array[String]): Unit =
-    val exitCode = new CommandLine(new ISOCodeResolver).execute(args: _*)
-    System.exit(exitCode)
-
-@Command(
   name = "scg-cli",
   description = Array("CLI to analyse projects based on SCG data"),
   subcommands = Array(classOf[HelpCommand])
 )
 class ScgCli:
+
+  @Command(name = "generate", description = Array("Generate SCG metadata"))
+  def generate(
+     @Parameters(
+       paramLabel = "<workspace>",
+       description = Array("Workspace where SCG proto files are located in .semanticgraphs directory or zipped archive")
+     )
+     workspace: String
+   ): Unit =
+    println(s"Generating SCG metadata for $workspace")
+    JavaParserMain.generateSemanticGraphFiles(workspace)
+    println(s"SCG was generated to $workspace/.semanticgraphs")
 
   @Command(name = "summary", description = Array("Summarize the project"))
   def summary(
