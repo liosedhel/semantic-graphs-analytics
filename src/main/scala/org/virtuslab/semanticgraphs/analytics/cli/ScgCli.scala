@@ -58,10 +58,11 @@ class ScgCli:
     workspace: String
   ): Unit =
     val scg = SemanticCodeGraph.read(ProjectAndVersion(workspace, workspace.split("/").last, ""))
-    val projectScoringSummary = CrucialNodes.analyze(scg)
+    val summary = CrucialNodes.analyze(scg)
     val outputFile = s"${scg.projectName}.crucial.json"
-    JsonUtils.dumpJsonFile(outputFile, projectScoringSummary.asJson.toString)
+    JsonUtils.dumpJsonFile(outputFile, summary.asJson.toString)
     println(s"Results exported to: $outputFile")
+    CrucialNodes.exportHtmlSummary(summary)
 
   @Command(name = "partition", description = Array("Suggest project partitioning."))
   def partition(

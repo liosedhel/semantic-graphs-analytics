@@ -3,7 +3,7 @@ package org.virtuslab.semanticgraphs.analytics.summary
 import scala.jdk.CollectionConverters.*
 import io.circe.generic.auto.*
 import io.circe.syntax.*
-import org.virtuslab.semanticgraphs.analytics.crucial.{CrucialNodes, ProjectScoringSummary}
+import org.virtuslab.semanticgraphs.analytics.crucial.{CrucialNodes, CrucialNodesSummary}
 import org.virtuslab.semanticgraphs.analytics.metrics.JGraphTMetrics
 import org.virtuslab.semanticgraphs.analytics.scg.{ProjectAndVersion, SemanticCodeGraph}
 import org.virtuslab.semanticgraphs.analytics.utils.JsonUtils
@@ -135,17 +135,17 @@ object ComputeProjectSummary extends App:
 
   import scala.concurrent.ExecutionContext.Implicits.global
 
-  def analyze(projects: List[SemanticCodeGraph], filePrefix: String): Future[List[ProjectScoringSummary]] =
+  def analyze(projects: List[SemanticCodeGraph], filePrefix: String): Future[List[CrucialNodesSummary]] =
     Future.sequence(projects.map { project =>
       Future {
         CrucialNodes.analyze(project, filePrefix)
       }.recover { case e =>
         println(s"Exception for ${project.projectName} ${e.getMessage}")
-        ProjectScoringSummary(project.projectName, project.projectAndVersion.workspace, Nil, Nil)
+        CrucialNodesSummary(project.projectName, project.projectAndVersion.workspace, Nil)
       }
     })
 
-  def printStats(results: List[ProjectScoringSummary]) =
+  def printStats(results: List[CrucialNodesSummary]) =
     println("Crucial nodes")
     println(results.head.stats.drop(3).map(_.id).mkString("Name & ", " & \\# & ", " & \\# \\\\"))
     results.foreach { stats =>

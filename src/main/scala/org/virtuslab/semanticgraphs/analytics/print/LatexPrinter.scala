@@ -1,6 +1,6 @@
 package org.virtuslab.semanticgraphs.analytics.print
 
-import org.virtuslab.semanticgraphs.analytics.crucial.{MetricIdAndDescription, ProjectScoringSummary, Statistic}
+import org.virtuslab.semanticgraphs.analytics.crucial.{MetricIdAndDescription, CrucialNodesSummary, Statistic}
 import org.virtuslab.semanticgraphs.analytics.scg.SemanticCodeGraph
 
 import java.nio.file.{Files, Path}
@@ -9,7 +9,7 @@ import scala.jdk.CollectionConverters.IteratorHasAsScala
 
 object LatexPrinter:
 
-  def toTexTable(scores: List[ProjectScoringSummary], metrics: List[MetricIdAndDescription]): String =
+  def toTexTable(scores: List[CrucialNodesSummary], metrics: List[MetricIdAndDescription]): String =
     val stringBuilder = new StringBuilder()
     stringBuilder.addAll("\\hdashline\n")
     scores.foreach { stats =>
@@ -22,7 +22,7 @@ object LatexPrinter:
     }
     stringBuilder.toString()
 
-  def topN(scores: List[ProjectScoringSummary], metric: MetricIdAndDescription, n: Int): String =
+  def topN(scores: List[CrucialNodesSummary], metric: MetricIdAndDescription, n: Int): String =
     val stringBuilder = new StringBuilder()
     stringBuilder.addAll("\\hdashline\n")
     scores.foreach { stats =>
@@ -42,7 +42,7 @@ object LatexPrinter:
 object LatexScoresPrinterApp extends App:
 
   import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
-  def readScores(filePrefix: String): List[ProjectScoringSummary] =
+  def readScores(filePrefix: String): List[CrucialNodesSummary] =
     Files
       .list(Path.of("./analysis"))
       .iterator()
@@ -50,16 +50,16 @@ object LatexScoresPrinterApp extends App:
       .filter(x => Files.isRegularFile(x) && x.getFileName.toString.startsWith(filePrefix))
       .map { file =>
         val fileContent = Source.fromFile(file.toUri).getLines().mkString
-        decode[ProjectScoringSummary](fileContent).getOrElse(throw new RuntimeException("Parsing problem"))
+        decode[CrucialNodesSummary](fileContent).getOrElse(throw new RuntimeException("Parsing problem"))
       }
       .toList
       .sortBy(summary => SemanticCodeGraph.allProjects.map(_.projectName).indexOf(summary.projectName))
 
   def printWholeTable(
-    scgScores: List[ProjectScoringSummary],
-    callScores: List[ProjectScoringSummary],
-    fullCallScores: List[ProjectScoringSummary],
-    metrics: List[MetricIdAndDescription]
+                       scgScores: List[CrucialNodesSummary],
+                       callScores: List[CrucialNodesSummary],
+                       fullCallScores: List[CrucialNodesSummary],
+                       metrics: List[MetricIdAndDescription]
   ) =
     // println(s"\\begin{tabular}{${"r|".repeat(metrics.size * 2 + 1)}}")
     println("\\hline")
@@ -93,7 +93,7 @@ object LatexScoresPrinterApp extends App:
 object LatexCombinedPrinterApp extends App:
 
   import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
-  def readScores(filePrefix: String): List[ProjectScoringSummary] =
+  def readScores(filePrefix: String): List[CrucialNodesSummary] =
     Files
       .list(Path.of("./analysis"))
       .iterator()
@@ -101,16 +101,16 @@ object LatexCombinedPrinterApp extends App:
       .filter(x => Files.isRegularFile(x) && x.getFileName.toString.startsWith(filePrefix))
       .map { file =>
         val fileContent = Source.fromFile(file.toUri).getLines().mkString
-        decode[ProjectScoringSummary](fileContent).getOrElse(throw new RuntimeException("Parsing problem"))
+        decode[CrucialNodesSummary](fileContent).getOrElse(throw new RuntimeException("Parsing problem"))
       }
       .toList
       .sortBy(summary => SemanticCodeGraph.allProjects.map(_.projectName).indexOf(summary.projectName))
 
   def printWholeTable(
-    scgScores: List[ProjectScoringSummary],
-    callScores: List[ProjectScoringSummary],
-    fullCallScore: List[ProjectScoringSummary],
-    n: Int
+                       scgScores: List[CrucialNodesSummary],
+                       callScores: List[CrucialNodesSummary],
+                       fullCallScore: List[CrucialNodesSummary],
+                       n: Int
   ) =
     // println(s"\\begin{tabular}{${"r|".repeat(metrics.size * 2 + 1)}}")
     println("\\hline")

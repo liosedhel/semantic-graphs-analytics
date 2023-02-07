@@ -1,18 +1,20 @@
 package org.virtuslab.semanticgraphs.analytics.crucial
 
-import io.circe.generic.auto._
-import io.circe.syntax._
-import org.jgrapht.alg.scoring._
+import io.circe.generic.auto.*
+import io.circe.syntax.*
+import org.jgrapht.alg.scoring.*
 import org.virtuslab.semanticgraphs.analytics.metrics.JGraphTMetrics.LabeledEdge
 import org.virtuslab.semanticgraphs.analytics.metrics.JGraphTMetrics
 import org.virtuslab.semanticgraphs.analytics.scg.{ProjectAndVersion, SemanticCodeGraph}
+import org.virtuslab.semanticgraphs.analytics.summary.SCGProjectSummary
+import org.virtuslab.semanticgraphs.analytics.summary.SCGProjectSummary.getClass
 import org.virtuslab.semanticgraphs.analytics.utils.JsonUtils
 
 import java.lang
+import java.nio.file.{Files, Path, StandardCopyOption}
 import java.util.concurrent.Executors
 import scala.jdk.CollectionConverters.{CollectionHasAsScala, MapHasAsScala}
 
-case class GraphStat(id: String, label: String, score: Double)
 case class NodeScore(id: String, label: String, score: Double)
 case class Statistic(id: String, description: String, nodes: List[NodeScore])
 
@@ -28,20 +30,19 @@ object Statistic:
   val betweenness = MetricIdAndDescription("betweenness", "Betweenness Centrality")
   val harmonic = MetricIdAndDescription("harmonic", "Harmonic Centrality")
   val combined = MetricIdAndDescription("combined", "All metrics combined")
-case class ProjectScoringSummary(
+case class CrucialNodesSummary(
   projectName: String,
   workspace: String,
-  stats: List[Statistic],
-  graphStats: List[GraphStat]
+  stats: List[Statistic]
 )
 
 object CrucialNodes:
 
-  def analyze(semanticCodeGraph: SemanticCodeGraph): ProjectScoringSummary =
+  def analyze(semanticCodeGraph: SemanticCodeGraph): CrucialNodesSummary =
     val jGraphTExporter = new JGraphTAnalyzer(semanticCodeGraph)
     jGraphTExporter.computeStatistics(semanticCodeGraph.projectName, semanticCodeGraph.projectAndVersion.workspace)
 
-  def analyze(semanticCodeGraph: SemanticCodeGraph, filePrefix: String): ProjectScoringSummary =
+  def analyze(semanticCodeGraph: SemanticCodeGraph, filePrefix: String): CrucialNodesSummary =
     val jGraphTExporter = new JGraphTAnalyzer(semanticCodeGraph)
     val stats =
       jGraphTExporter.computeStatistics(semanticCodeGraph.projectName, semanticCodeGraph.projectAndVersion.workspace)
@@ -49,6 +50,26 @@ object CrucialNodes:
     JsonUtils.dumpJsonFile(outputFile, stats.asJson.toString)
     println(s"Results exported to: $outputFile")
     stats
+
+
+  def exportHtmlSummary(summary: CrucialNodesSummary): Unit = {
+    exportJsSummary("crucial.js", summary)
+    copySummaryHtml(Path.of("."))
+  }
+
+  private def exportJsSummary(fileName: String, summary: CrucialNodesSummary): Unit = {
+    import java.io._
+    val pw = new PrintWriter(new File(fileName))
+    val json = s"const crucial = ${summary.asJson.spaces2};"
+    pw.write(json)
+    pw.close()
+  }
+
+  private def copySummaryHtml(summaryResultDirectory: Path): Unit = {
+    val inputStream = getClass.getClassLoader.getResourceAsStream("crucial.html")
+    Files.copy(inputStream, summaryResultDirectory.resolve("crucial.html"), StandardCopyOption.REPLACE_EXISTING)
+    inputStream.close()
+  }
 
 object CrucialNodesApp extends App:
   val workspace = args(0)
@@ -107,7 +128,7 @@ class JGraphTAnalyzer(semanticCodeGraph: SemanticCodeGraph):
       }
     )
 
-  def computeStatistics(projectName: String, workspace: String): ProjectScoringSummary =
+  def computeStatistics(projectName: String, workspace: String): CrucialNodesSummary =
     println(
       s"Nodes size: ${graph.vertexSet().size()}, Edges ${graph.edgeSet().size()}"
     )
@@ -186,25 +207,10 @@ class JGraphTAnalyzer(semanticCodeGraph: SemanticCodeGraph):
       )
     )
 
-    val averageClusteringCoefficient =
-      JGraphTMetrics.averageClusteringCoefficient(JGraphTMetrics.exportUndirected(semanticCodeGraph.nodes))
-//    println(
-//      s"Average Clustering Coefficient $averageClusteringCoefficient"
-//    )
-    val clusteringCoefficient =
-      GraphStat("clustering_coefficient", "Average Clustering Coefficient", averageClusteringCoefficient)
-
-    val averageNodeDegree = JGraphTMetrics.averageDegree(graph)
-//    println(
-//      s"Average Degree $averageNodeDegree"
-//    )
-    val nodesDegree = GraphStat("average_node_degree", "Average Graph Degree", averageNodeDegree)
-
-    ProjectScoringSummary(
+    CrucialNodesSummary(
       projectName,
       workspace,
-      statistics :+ computeCombinedMetrics(statistics),
-      List(nodesDegree, clusteringCoefficient)
+      statistics :+ computeCombinedMetrics(statistics)
     )
 
   def computeCombinedMetrics(stats: List[Statistic]): Statistic =
