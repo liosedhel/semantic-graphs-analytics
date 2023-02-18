@@ -10,13 +10,17 @@ import org.virtuslab.semanticgraphs.analytics.summary.SCGProjectSummary
 import io.circe.generic.auto.*
 import io.circe.syntax.*
 import org.virtuslab.semanticgraphs.analytics.crucial.CrucialNodes
-import org.virtuslab.semanticgraphs.analytics.partitions.PartitionResults
+import org.virtuslab.semanticgraphs.analytics.partitions.{EdgeDTO, GraphNodeDTO, LocationDTO, PartitionResults}
 import picocli.CommandLine
-import picocli.CommandLine.{Command, HelpCommand, Parameters}
+import picocli.CommandLine.{Command, HelpCommand, Option, Parameters}
 import picocli.CommandLine.Model.CommandSpec
 
 import java.io.{File, PrintWriter}
 import java.util.Locale
+import upickle.default.*
+import upickle.default.{macroRW, ReadWriter as RW}
+
+import java.nio.file.{Files, Path}
 
 @Command(
   name = "scg-cli",
@@ -55,14 +59,32 @@ class ScgCli:
       paramLabel = "<workspace>",
       description = Array("Workspace where SCG proto files are located in .semanticgraphs directory or zipped archive")
     )
-    workspace: String
+    workspace: String,
+    @Option(names = Array("-o", "--output"), description = Array("Output format: html, json, txt"), arity = "0..1", defaultValue = "html")
+    output: String,
+    @Option(names = Array("-m", "--mode"), description = Array("Analysis mode: quick, full"), arity = "0..1", defaultValue = "quick")
+    mode: String
   ): Unit =
     val scg = SemanticCodeGraph.read(ProjectAndVersion(workspace, workspace.split("/").last, ""))
-    val summary = CrucialNodes.analyze(scg)
-    val outputFile = s"${scg.projectName}.crucial.json"
-    JsonUtils.dumpJsonFile(outputFile, summary.asJson.toString)
-    println(s"Results exported to: $outputFile")
-    CrucialNodes.exportHtmlSummary(summary)
+    val summary = CrucialNodes.analyze(scg, mode == "quick")
+    output match {
+      case "html" =>
+        CrucialNodes.exportHtmlSummary(summary)
+      case "json" =>
+        val outputFile = s"${scg.projectName}.crucial.json"
+        JsonUtils.dumpJsonFile(outputFile, summary.asJson.toString)
+        println(s"Results exported to: $outputFile")
+      case "txt" =>
+        println(summary.asJson.spaces2)
+    }
+
+  case class PartitionResult(results: List[PartitionResults])
+  object PartitionResult:
+    given RW[EdgeDTO] = macroRW
+    given RW[LocationDTO] = macroRW
+    given RW[GraphNodeDTO] = macroRW
+    given RW[PartitionResults] = macroRW
+    given RW[PartitionResult] = macroRW
 
   @Command(name = "partition", description = Array("Suggest project partitioning."))
   def partition(
@@ -72,21 +94,39 @@ class ScgCli:
     )
     workspace: String,
     @Parameters(paramLabel = "<nparts>", description = Array("Up to how many partitions split the project"))
-    nparts: Int
+    nparts: Int,
+    @Option(names = Array("-o", "--output"), description = Array("Output format: html, json, txt, default: ${DEFAULT-VALUE}"), arity = "0..1", defaultValue = "html")
+    output: String,
+    @Option(names = Array("--use-docker"), description = Array("Use partition gpmetis/patoh programs through docker image, default: ${DEFAULT-VALUE}"), arity = "0..1", defaultValue = "false")
+    useDocker: Boolean
   ): Unit =
+    println(useDocker)
+    val projectAndVersion = ProjectAndVersion(workspace, workspace.split("/").last, "")
     val results = PartitioningComparisonApp.runPartitionComparison(
-      ProjectAndVersion(workspace, workspace.split("/").last, ""),
-      nparts
+      projectAndVersion,
+      nparts,
+      useDocker
     )
-    PartitionResults.print(
-      new MultiPrinter(
-        new PrintWriter(System.out),
-        new PrintWriter(new PrintWriter(new File(s"${workspace.replace("/", "-")}.partition.txt")))
-      ),
-      results
-    )
+    output match {
+      case "html" =>
+      case "json" =>
+        val outputFile = s"${projectAndVersion.projectName}.partition.json"
+        JsonUtils.dumpJsonFile(outputFile, write(PartitionResult(results)))
+        println(s"Results exported to: $outputFile")
+      case "txt" =>
+        PartitionResults.print(
+          new MultiPrinter(
+            new PrintWriter(System.out),
+            new PrintWriter(new PrintWriter(new File(s"${workspace.replace("/", "-")}.partition.txt")))
+          ),
+          results
+        )
+    }
+
+
 
 object ScgCli:
   def main(args: Array[String]): Unit =
+    //Files.createDirectories(Path.of(".scg"))
     val exitCode = new CommandLine(new ScgCli).execute(args: _*)
     System.exit(exitCode)

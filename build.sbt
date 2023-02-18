@@ -21,6 +21,7 @@ lazy val root = project
     libraryDependencies += "com.thesamet.scalapb" %% "scalapb-runtime" % "0.11.12",
     libraryDependencies += "io.circe" %% "circe-generic" % "0.14.3",
     libraryDependencies += "io.circe" %% "circe-parser" % "0.14.3",
+    libraryDependencies += "com.lihaoyi" %% "upickle" % "3.0.0-M1",
     libraryDependencies += "com.lihaoyi" %% "mainargs" % "0.3.0",
     libraryDependencies += "org.apache.spark" %% "spark-graphx" % "3.3.1" cross CrossVersion.for3Use2_13,
     libraryDependencies += "org.apache.spark" %% "spark-sql" % "3.3.1" cross CrossVersion.for3Use2_13,

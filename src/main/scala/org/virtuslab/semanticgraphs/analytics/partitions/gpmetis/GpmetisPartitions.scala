@@ -1,9 +1,10 @@
 package org.virtuslab.semanticgraphs.analytics.partitions.gpmetis
 
 import com.virtuslab.semanticgraphs.proto.model.graphnode.GraphNode
-import org.virtuslab.semanticgraphs.analytics.partitions.{PartitionHelpers, PartitionResults}
+import org.virtuslab.semanticgraphs.analytics.partitions.{DockerDistribution, GraphNodeDTO, PartitionHelpers, PartitionResults}
 import org.virtuslab.semanticgraphs.analytics.scg.{ProjectAndVersion, SemanticCodeGraph}
 import org.virtuslab.semanticgraphs.analytics.utils.MultiPrinter
+import org.virtuslab.semanticgraphs.analytics.partitions.GraphNodeDTO.toGraphNodeDto
 
 import java.io.File
 import scala.collection.mutable
@@ -19,9 +20,9 @@ object GpmetisPartitionsApp extends App:
   val biggestComponentNodes =
     PartitionHelpers.takeBiggestComponentOnly(
       SemanticCodeGraph.readOnlyGlobalNodes(ProjectAndVersion(workspace, projectName, ""))
-    )
+    ).map(_.toGraphNodeDto)
 
-  val results = GpmetisPartitions.partition(biggestComponentNodes, projectName, nparts)
+  val results = GpmetisPartitions.partition(biggestComponentNodes, projectName, nparts, false)
 
   results.foreach { result =>
     PartitionHelpers.exportToGdf(
@@ -46,17 +47,22 @@ object GpmetisPartitionsApp extends App:
 
 object GpmetisPartitions:
 
-  def partition(nodes: List[GraphNode], projectName: String, nparts: Int): List[PartitionResults] =
+  def partition(nodes: List[GraphNodeDTO], projectName: String, nparts: Int, useDocker: Boolean): List[PartitionResults] =
     val indexes = SpectralGraphUtils.exportToSpectralGraph(projectName, nodes)
-    val result = GpmetisPartitions.computePartitioning(nodes, indexes, nparts, projectName)
+    val result = GpmetisPartitions.computePartitioning(nodes, indexes, nparts, projectName, useDocker)
     new File(s"$projectName.gpmetis").delete()
     result
 
-  def computePartitioning(nodes: List[GraphNode], indexes: Array[String], nparts: Int, projectName: String): List[PartitionResults] =
+  def computePartitioning(nodes: List[GraphNodeDTO], indexes: Array[String], nparts: Int, projectName: String, useDocker: Boolean): List[PartitionResults] =
     if nparts > 1 then
       val computing =
-        os.proc("gpmetis", "-ptype=kway", "-contig", "-objtype=cut", "-ufactor=1000", s"$projectName.gpmetis", nparts)
-          .call()
+        if useDocker then
+          os.proc("docker", "run", "--rm", "-v", os.pwd.toString + "/:/data", DockerDistribution.dockerImage, "gpmetis", "-ptype=kway", "-contig", "-objtype=cut", "-ufactor=1000", s"$projectName.gpmetis", nparts)
+            .call()
+        else
+          os.proc("gpmetis", "-ptype=kway", "-contig", "-objtype=cut", "-ufactor=1000", s"$projectName.gpmetis", nparts)
+            .call()
+        end if
 
       if computing.exitCode != 0 then throw new RuntimeException(s"Computation failed")
 
@@ -64,7 +70,7 @@ object GpmetisPartitions:
       val gpMetisResults = readGPMetisResults(gpMetisPartFile, indexes)
       new File(gpMetisPartFile).delete()
 
-      computePartitioning(nodes, indexes, nparts - 1, projectName) :+ PartitionResults(
+      computePartitioning(nodes, indexes, nparts - 1, projectName, useDocker) :+ PartitionResults(
         method = "gpmetis",
         nodes = nodes,
         nparts = nparts,
@@ -84,12 +90,12 @@ object GpmetisPartitions:
 
 object SpectralGraphUtils:
 
-  def exportToSpectralGraph(projectName: String, nodes: List[GraphNode]): Array[String] =
+  def exportToSpectralGraph(projectName: String, nodes: List[GraphNodeDTO]): Array[String] =
     val (nodeToIndex, nodeAndEdges) = toNodeAndEdges(nodes)
     dumpGraph(projectName, nodeAndEdges)
     nodeToIndex.toList.sortBy(_._2).map(_._1).toArray
 
-  def toNodeAndEdges(nodes: Iterable[GraphNode]): (mutable.Map[String, Int], mutable.Map[Int, mutable.Set[Int]]) =
+  def toNodeAndEdges(nodes: Iterable[GraphNodeDTO]): (mutable.Map[String, Int], mutable.Map[Int, mutable.Set[Int]]) =
     var counter = 0
     val nodeAndNumber = scala.collection.mutable.Map.empty[String, Int]
     def getNodeNumber(id: String): Int =

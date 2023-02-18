@@ -2,17 +2,13 @@ package org.virtuslab.semanticgraphs.analytics.metrics
 
 import com.virtuslab.semanticgraphs.proto.model.graphnode.GraphNode
 import org.jgrapht.alg.clustering.{GirvanNewmanClustering, KSpanningTreeClustering, LabelPropagationClustering}
-import org.jgrapht.alg.connectivity.{
-  BiconnectivityInspector,
-  ConnectivityInspector,
-  KosarajuStrongConnectivityInspector
-}
+import org.jgrapht.alg.connectivity.{BiconnectivityInspector, ConnectivityInspector, KosarajuStrongConnectivityInspector}
 import org.jgrapht.alg.scoring.{BetweennessCentrality, ClusteringCoefficient}
 import org.jgrapht.alg.shortestpath.{BFSShortestPath, GraphMeasurer}
 import org.jgrapht.graph.{AsUndirectedGraph, DefaultEdge}
 import org.jgrapht.graph.builder.GraphTypeBuilder
 import org.jgrapht.{Graph, GraphMetrics}
-import org.virtuslab.semanticgraphs.analytics.partitions.PartitionResults
+import org.virtuslab.semanticgraphs.analytics.partitions.{GraphNodeDTO, PartitionResults}
 
 object JGraphTMetrics:
 
@@ -46,7 +42,7 @@ object JGraphTMetrics:
         LabeledEdge(parentId, childId, role)
       )
 
-  def exportUndirected(nodes: Iterable[GraphNode]): Graph[String, LabeledEdge] =
+  def exportUndirected(nodes: Iterable[GraphNodeDTO]): Graph[String, LabeledEdge] =
     val graph: Graph[String, LabeledEdge] = emptyUndirectedGraph()
 
     nodes
@@ -90,7 +86,7 @@ object JGraphTMetrics:
     part.getClustering.getClusters.asScala.toList.map(_.asScala.toSet).zipWithIndex.foldLeft(Map.empty[String, Int]) {
       case (map, (nodes, index)) => nodes.foldLeft(map)((r, node) => r.updated(node, index))
     }
-  def labelPropagationClustering(graph: List[GraphNode], maxIterations: Int): PartitionResults =
+  def labelPropagationClustering(graph: List[GraphNodeDTO], maxIterations: Int): PartitionResults =
     val undirectedGraph = exportUndirected(graph)
     val part = new LabelPropagationClustering[String, LabeledEdge](undirectedGraph, maxIterations)
     val nodeToPart =
@@ -105,7 +101,7 @@ object JGraphTMetrics:
       comment = "Calculated by JGraphT LabelPropagationClustering"
     )
 
-  def GirvanNewmanClustering(graph: List[GraphNode], k: Int): PartitionResults =
+  def GirvanNewmanClustering(graph: List[GraphNodeDTO], k: Int): PartitionResults =
     val undirectedGraph = exportUndirected(graph)
     val part = new GirvanNewmanClustering[String, LabeledEdge](undirectedGraph, k)
     val nodeToPart =

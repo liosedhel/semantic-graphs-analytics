@@ -49,7 +49,7 @@ object PartitionHelpers:
 
   def exportAllToGDF(
     maxNParts: Int,
-    nodes: List[GraphNode],
+    nodes: List[GraphNodeDTO],
     outputFileName: String,
     partitionResults: List[PartitionResults]
   ): Unit =
@@ -67,8 +67,8 @@ object PartitionHelpers:
       val printResult = (2 to maxNParts).map(i => results(i)(node.id)).mkString(",")
       import node._
       printer.println(
-        s"$id, $displayName, $kind, ${location.map(_.uri).getOrElse("")}, ${properties.get("LOC").map(_.toInt).getOrElse(0)}, ${properties
-            .getOrElse("package", "__empty__")}, $printResult"
+        s"$id, $displayName, $kind, ${location.map(_.uri).getOrElse("")}, ${loc.getOrElse(0)}, ${`package`
+            .getOrElse("__empty__")}, $printResult"
       )
     }
     printer.println(
@@ -87,7 +87,7 @@ object PartitionHelpers:
 
   def exportToGdf(
     outputFileName: String,
-    nodes: List[GraphNode],
+    nodes: List[GraphNodeDTO],
     nodeToPartMap: Map[String, Int],
     connectedComponents: Map[String, Int]
   ): Unit =
@@ -102,8 +102,8 @@ object PartitionHelpers:
       printer.println(
         s"$id, $displayName, $kind, ${location
             .map(_.uri)
-            .getOrElse("")}, ${properties.get("LOC").map(_.toInt).getOrElse(0)}, ${nodeToPartMap(node.id)}, ${properties
-            .getOrElse("package", "__empty__")}, ${connectedComponents(node.id)}"
+            .getOrElse("")}, ${loc.getOrElse(0)}, ${nodeToPartMap(node.id)}, ${`package`
+            .getOrElse("__empty__")}, ${connectedComponents(node.id)}"
       )
     }
     printer.println(

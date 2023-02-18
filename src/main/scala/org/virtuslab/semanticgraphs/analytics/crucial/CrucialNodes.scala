@@ -38,14 +38,14 @@ case class CrucialNodesSummary(
 
 object CrucialNodes:
 
-  def analyze(semanticCodeGraph: SemanticCodeGraph): CrucialNodesSummary =
+  def analyze(semanticCodeGraph: SemanticCodeGraph, quick: Boolean): CrucialNodesSummary =
     val jGraphTExporter = new JGraphTAnalyzer(semanticCodeGraph)
-    jGraphTExporter.computeStatistics(semanticCodeGraph.projectName, semanticCodeGraph.projectAndVersion.workspace)
+    jGraphTExporter.computeStatistics(semanticCodeGraph.projectName, semanticCodeGraph.projectAndVersion.workspace, quick)
 
   def analyze(semanticCodeGraph: SemanticCodeGraph, filePrefix: String): CrucialNodesSummary =
     val jGraphTExporter = new JGraphTAnalyzer(semanticCodeGraph)
     val stats =
-      jGraphTExporter.computeStatistics(semanticCodeGraph.projectName, semanticCodeGraph.projectAndVersion.workspace)
+      jGraphTExporter.computeStatistics(semanticCodeGraph.projectName, semanticCodeGraph.projectAndVersion.workspace, false)
     val outputFile = s"$filePrefix-stats-${semanticCodeGraph.projectName}.crucial.json"
     JsonUtils.dumpJsonFile(outputFile, stats.asJson.toString)
     println(s"Results exported to: $outputFile")
@@ -128,7 +128,7 @@ class JGraphTAnalyzer(semanticCodeGraph: SemanticCodeGraph):
       }
     )
 
-  def computeStatistics(projectName: String, workspace: String): CrucialNodesSummary =
+  def computeStatistics(projectName: String, workspace: String, quick: Boolean): CrucialNodesSummary =
     println(
       s"Nodes size: ${graph.vertexSet().size()}, Edges ${graph.edgeSet().size()}"
     )
@@ -195,22 +195,31 @@ class JGraphTAnalyzer(semanticCodeGraph: SemanticCodeGraph):
 //        desc = "Top clustering coefficient",
 //        new ClusteringCoefficient[String, LabeledEdge](graph).getScores.asScala
 //      ),
-      computeStats(
-        id = Statistic.betweenness,
-        desc = "Betweenness Centrality",
-        JGraphTMetrics.betweennessCentrality(graph).asScala
-      ),
-      computeStats(
-        id = Statistic.harmonic,
-        desc = "Top harmonic centrality",
-        new HarmonicCentrality[String, LabeledEdge](graph).getScores.asScala
-      )
     )
 
+    val computeIntensive =
+      if !quick then
+        List(
+          computeStats(
+            id = Statistic.betweenness,
+            desc = "Betweenness Centrality",
+            JGraphTMetrics.betweennessCentrality(graph).asScala
+          ),
+          computeStats(
+            id = Statistic.harmonic,
+            desc = "Top harmonic centrality",
+            new HarmonicCentrality[String, LabeledEdge](graph).getScores.asScala
+          )
+        )
+      else
+        Nil
+
+
+    val allStatistics = statistics ++ computeIntensive
     CrucialNodesSummary(
       projectName,
       workspace,
-      statistics :+ computeCombinedMetrics(statistics)
+      allStatistics :+ computeCombinedMetrics(allStatistics)
     )
 
   def computeCombinedMetrics(stats: List[Statistic]): Statistic =

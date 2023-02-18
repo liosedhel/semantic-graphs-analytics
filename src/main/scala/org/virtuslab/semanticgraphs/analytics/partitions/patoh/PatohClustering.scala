@@ -1,9 +1,10 @@
 package org.virtuslab.semanticgraphs.analytics.partitions.patoh
 
 import com.virtuslab.semanticgraphs.proto.model.graphnode.GraphNode
-import org.virtuslab.semanticgraphs.analytics.partitions.{PartitionHelpers, PartitionResults}
+import org.virtuslab.semanticgraphs.analytics.partitions.{DockerDistribution, GraphNodeDTO, PartitionHelpers, PartitionResults}
 import org.virtuslab.semanticgraphs.analytics.scg.{ProjectAndVersion, SemanticCodeGraph}
 import org.virtuslab.semanticgraphs.analytics.utils.MultiPrinter
+import org.virtuslab.semanticgraphs.analytics.partitions.GraphNodeDTO.toGraphNodeDto
 
 import java.io.File
 import scala.collection.mutable
@@ -20,9 +21,9 @@ object PatohClustering extends App:
   val biggestComponentNodes =
     PartitionHelpers.takeBiggestComponentOnly(
       SemanticCodeGraph.readOnlyGlobalNodes(ProjectAndVersion(workspace, projectName, ""))
-    )
+    ).map(_.toGraphNodeDto)
 
-  val results = PatohPartitions.partition(biggestComponentNodes, projectName, nparts)
+  val results = PatohPartitions.partition(biggestComponentNodes, projectName, nparts, false)
 
   PartitionResults.print(
     multiPrinter,
@@ -38,17 +39,21 @@ object PatohClustering extends App:
 
 object PatohPartitions:
 
-  def partition(nodes: List[GraphNode], projectName: String, nparts: Int): List[PartitionResults] =
+  def partition(nodes: List[GraphNodeDTO], projectName: String, nparts: Int, useDocker: Boolean): List[PartitionResults] =
     val indexes = PatohPartitions.exportPatohInputGraph(projectName, nodes)
-    val result = computePatohPartitioning(nodes, indexes, nparts, projectName)
+    val result = computePatohPartitioning(nodes, indexes, nparts, projectName, useDocker)
     new File(s"$projectName.patoh").delete()
     result
 
-  def computePatohPartitioning(nodes: List[GraphNode], indexes: Array[String], nparts: Int, projectName: String): List[PartitionResults] =
+  def computePatohPartitioning(nodes: List[GraphNodeDTO], indexes: Array[String], nparts: Int, projectName: String, useDocker: Boolean): List[PartitionResults] =
     if nparts > 1 then
       val computing =
-        os.proc("patoh", s"$projectName.patoh", nparts, "IB=0.5", "PA=11")
-          .call()
+        if useDocker then
+          os.proc("docker", "run", "--rm", "-v", os.pwd.toString + "/:/data", DockerDistribution.dockerImage, "patoh", s"$projectName.patoh", nparts, "IB=0.5", "PA=11")
+            .call()
+        else
+          os.proc("patoh", s"$projectName.patoh", nparts, "IB=0.5", "PA=11")
+            .call()
 
       if computing.exitCode != 0 then throw new RuntimeException(s"Computation failed")
       println(computing.out.text())
@@ -57,7 +62,7 @@ object PatohPartitions:
       val patohResults = readPatohResults(patohPartFile, indexes)
       new File(patohPartFile).delete()
 
-      computePatohPartitioning(nodes, indexes, nparts - 1, projectName) :+ PartitionResults(
+      computePatohPartitioning(nodes, indexes, nparts - 1, projectName, useDocker) :+ PartitionResults(
         method = "patoh",
         nodes = nodes,
         nparts = nparts,
@@ -75,12 +80,12 @@ object PatohPartitions:
       .map { case (part, index) => (indexes(index), part.toInt) }
       .toMap
 
-  def exportPatohInputGraph(projectName: String, nodes: List[GraphNode]): Array[String] =
+  def exportPatohInputGraph(projectName: String, nodes: List[GraphNodeDTO]): Array[String] =
     val (nodeToIndex, networks) = toNodeAndEdges(nodes)
     dumpGraph(projectName, nodeToIndex.size, networks)
     nodeToIndex.toList.sortBy(_._2).map(_._1).toArray
 
-  private def toNodeAndEdges(nodes: List[GraphNode]): (mutable.Map[String, Int], List[Set[Int]]) =
+  private def toNodeAndEdges(nodes: List[GraphNodeDTO]): (mutable.Map[String, Int], List[Set[Int]]) =
     var counter = 0
     val nodeAndNumber = scala.collection.mutable.Map.empty[String, Int]
     def getNodeNumber(id: String): Int =
