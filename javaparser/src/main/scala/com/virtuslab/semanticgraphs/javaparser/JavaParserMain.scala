@@ -17,14 +17,14 @@ object JavaParserMain:
 
   val spring_boot = "/Users/kborowski/phd/spring-boot"
 
-  //generateSemanticGraphFiles(commons_io)
+  // generateSemanticGraphFiles(commons_io)
 
   def generateSemanticGraphFiles(
     rootPathString: String
   ): Unit =
-    val files: Seq[File]         = JavaParser.getSourceFiles(rootPathString)
+    val files: Seq[File] = JavaParser.getSourceFiles(rootPathString)
     val compilationConfiguration = JavaParser.CompilationConfiguration(rootPathString)
-    val filePaths                = files.map(_.toPath)
+    val filePaths = files.map(_.toPath)
     StaticJavaParser.setConfiguration(compilationConfiguration.parserConfiguration)
 
     val results = filePaths
@@ -38,9 +38,9 @@ object JavaParserMain:
       }
       .map { path =>
         println(path)
-        Try(JavaParser.extractParsedResult(StaticJavaParser.parse(path.toFile), compilationConfiguration.projectPath))
-          .toEither
-          .left
+        Try(
+          JavaParser.extractParsedResult(StaticJavaParser.parse(path.toFile), compilationConfiguration.projectPath)
+        ).toEither.left
           .map(e => e -> path)
       }
 
@@ -52,6 +52,6 @@ object JavaParserMain:
     }
 
     val failed = results.count(_.isLeft)
-    val total  = results.size
+    val total = results.size
 
     println(s"Failure rate: ${failed * 100 / total}")

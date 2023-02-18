@@ -8,7 +8,7 @@ object NodeKind:
 
 enum EdgeKind:
   case CALL, DECLARATION, EXTEND, EXTEND_TYPE_ARGUMENT, PARAMETER, RETURN_TYPE, RETURN_TYPE_ARGUMENT, TYPE,
-  TYPE_ARGUMENT, TYPE_PARAMETER, SUPER, OVERRIDE
+    TYPE_ARGUMENT, TYPE_PARAMETER, SUPER, OVERRIDE
 
 object EdgeKind:
   given edgeKindToString: Conversion[EdgeKind, String] = _.toString

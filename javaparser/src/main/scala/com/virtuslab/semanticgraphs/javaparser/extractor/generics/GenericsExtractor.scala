@@ -1,18 +1,23 @@
 package com.virtuslab.semanticgraphs.javaparser.extractor.generics
 
-import com.virtuslab.semanticgraphs.javaparser.extractor.{ EdgeKind, NodeKind }
+import com.virtuslab.semanticgraphs.javaparser.extractor.{EdgeKind, NodeKind}
 import com.virtuslab.semanticgraphs.javaparser.extractor.utils.*
 import com.virtuslab.semanticgraphs.parsercommon.logger.GraphBuddyLogging
 import com.virtuslab.semanticgraphs.proto.model.graphnode.GraphNode
 
-import com.github.javaparser.ast.`type`.{ ClassOrInterfaceType, Type, TypeParameter }
+import com.github.javaparser.ast.`type`.{ClassOrInterfaceType, Type, TypeParameter}
 import com.github.javaparser.ast.body.*
 import com.github.javaparser.ast.expr.VariableDeclarationExpr
-import com.github.javaparser.ast.nodeTypes.{ NodeWithType, NodeWithTypeParameters }
+import com.github.javaparser.ast.nodeTypes.{NodeWithType, NodeWithTypeParameters}
 import com.github.javaparser.ast.Node
-import com.github.javaparser.resolution.declarations.{ ResolvedDeclaration, ResolvedMethodLikeDeclaration, ResolvedTypeParameterDeclaration, ResolvedTypeParametrizable }
+import com.github.javaparser.resolution.declarations.{
+  ResolvedDeclaration,
+  ResolvedMethodLikeDeclaration,
+  ResolvedTypeParameterDeclaration,
+  ResolvedTypeParametrizable
+}
 import com.github.javaparser.resolution.declarations.ResolvedTypeParameterDeclaration.Bound
-import com.github.javaparser.resolution.types.{ ResolvedReferenceType, ResolvedTypeVariable }
+import com.github.javaparser.resolution.types.{ResolvedReferenceType, ResolvedTypeVariable}
 import com.github.javaparser.resolution.Resolvable
 
 import java.util.Objects

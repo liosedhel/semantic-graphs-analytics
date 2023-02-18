@@ -40,20 +40,27 @@ object CrucialNodes:
 
   def analyze(semanticCodeGraph: SemanticCodeGraph, quick: Boolean): CrucialNodesSummary =
     val jGraphTExporter = new JGraphTAnalyzer(semanticCodeGraph)
-    jGraphTExporter.computeStatistics(semanticCodeGraph.projectName, semanticCodeGraph.projectAndVersion.workspace, quick)
+    jGraphTExporter.computeStatistics(
+      semanticCodeGraph.projectName,
+      semanticCodeGraph.projectAndVersion.workspace,
+      quick
+    )
 
   def analyze(semanticCodeGraph: SemanticCodeGraph, filePrefix: String): CrucialNodesSummary =
     val jGraphTExporter = new JGraphTAnalyzer(semanticCodeGraph)
     val stats =
-      jGraphTExporter.computeStatistics(semanticCodeGraph.projectName, semanticCodeGraph.projectAndVersion.workspace, false)
+      jGraphTExporter.computeStatistics(
+        semanticCodeGraph.projectName,
+        semanticCodeGraph.projectAndVersion.workspace,
+        false
+      )
     val outputFile = s"$filePrefix-stats-${semanticCodeGraph.projectName}.crucial.json"
     JsonUtils.dumpJsonFile(outputFile, stats.asJson.toString)
     println(s"Results exported to: $outputFile")
     stats
 
-
   def exportHtmlSummary(summary: CrucialNodesSummary): Unit = {
-    exportJsSummary("crucial.js", summary)
+    exportJsSummary("partition.js", summary)
     copySummaryHtml(Path.of("."))
   }
 
@@ -181,7 +188,7 @@ class JGraphTAnalyzer(semanticCodeGraph: SemanticCodeGraph):
         id = Statistic.katz,
         desc = "Katz Centrality - how influential the node is",
         new KatzCentrality(graph).getScores.asScala
-      ),
+      )
 //      computeStats(
 //        id = "codesmell",
 //        desc = "Code smell - methods with too many local declarations",
@@ -211,9 +218,7 @@ class JGraphTAnalyzer(semanticCodeGraph: SemanticCodeGraph):
             new HarmonicCentrality[String, LabeledEdge](graph).getScores.asScala
           )
         )
-      else
-        Nil
-
+      else Nil
 
     val allStatistics = statistics ++ computeIntensive
     CrucialNodesSummary(

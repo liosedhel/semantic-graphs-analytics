@@ -13,7 +13,8 @@ trait FileVersion {
   def contentHashCode: Int
 
   override def equals(obj: Any): Boolean = obj != null && (obj match {
-    case other: FileVersion => path == other.path && (
+    case other: FileVersion =>
+      path == other.path && (
         lastModified == other.lastModified || (
           size == other.size &&
             contentHashCode == other.contentHashCode

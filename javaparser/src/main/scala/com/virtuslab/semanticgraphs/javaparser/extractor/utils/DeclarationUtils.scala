@@ -1,13 +1,13 @@
 package com.virtuslab.semanticgraphs.javaparser.extractor.utils
 
-import com.virtuslab.semanticgraphs.javaparser.extractor.{ EdgeKind, NodeKind }
+import com.virtuslab.semanticgraphs.javaparser.extractor.{EdgeKind, NodeKind}
 import com.virtuslab.semanticgraphs.javaparser.extractor.utils.TooltipUtils.*
 import com.virtuslab.semanticgraphs.parsercommon.toPath
-import com.virtuslab.semanticgraphs.proto.model.graphnode.{ Edge, Location }
+import com.virtuslab.semanticgraphs.proto.model.graphnode.{Edge, Location}
 
 import ch.qos.logback.classic.Logger
-import com.github.javaparser.ast.`type`.{ ClassOrInterfaceType, PrimitiveType, Type, TypeParameter }
-import com.github.javaparser.ast.{ Node, PackageDeclaration }
+import com.github.javaparser.ast.`type`.{ClassOrInterfaceType, PrimitiveType, Type, TypeParameter}
+import com.github.javaparser.ast.{Node, PackageDeclaration}
 import com.github.javaparser.ast.body.*
 import com.github.javaparser.ast.expr.*
 import com.github.javaparser.ast.nodeTypes.*
@@ -15,9 +15,14 @@ import com.github.javaparser.ast.stmt.ExplicitConstructorInvocationStmt
 import com.github.javaparser.ast.AccessSpecifier
 import com.github.javaparser.resolution.declarations.*
 import com.github.javaparser.resolution.declarations.ResolvedTypeParameterDeclaration.Bound
-import com.github.javaparser.resolution.types.{ ResolvedReferenceType, ResolvedType, ResolvedTypeVariable }
+import com.github.javaparser.resolution.types.{ResolvedReferenceType, ResolvedType, ResolvedTypeVariable}
 import com.github.javaparser.resolution.Resolvable
-import com.github.javaparser.symbolsolver.javaparsermodel.declarations.{ JavaParserEnumConstantDeclaration, JavaParserFieldDeclaration, JavaParserParameterDeclaration, JavaParserVariableDeclaration }
+import com.github.javaparser.symbolsolver.javaparsermodel.declarations.{
+  JavaParserEnumConstantDeclaration,
+  JavaParserFieldDeclaration,
+  JavaParserParameterDeclaration,
+  JavaParserVariableDeclaration
+}
 
 import java.io.File
 import java.nio.file.Path
@@ -28,11 +33,11 @@ import scala.collection.mutable
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
 import scala.language.implicitConversions
-import scala.reflect.{ classTag, ClassTag }
-import scala.util.{ Success, Try }
+import scala.reflect.{classTag, ClassTag}
+import scala.util.{Success, Try}
 
-extension (classLikeDeclaration: ClassLikeDeclaration)(
-  using logger: Logger
+extension (classLikeDeclaration: ClassLikeDeclaration)(using
+  logger: Logger
 ) {
   def getQualifiedSignature: Option[String] = classLikeDeclaration.getFullyQualifiedName.toScala
 
@@ -49,7 +54,7 @@ extension (classLikeDeclaration: ClassLikeDeclaration)(
       case _                      => None
     }
     parentFqn <- parentTd.getFullyQualifiedName.toScala
-    fqn       <- classLikeDeclaration.getFullyQualifiedName.toScala
+    fqn <- classLikeDeclaration.getFullyQualifiedName.toScala
   } yield parentFqn == fqn).getOrElse(false)
 
   def constructorDeclarations: Seq[ConstructorDeclaration] =
@@ -68,7 +73,7 @@ extension (classLikeDeclaration: ClassLikeDeclaration)(
 
   def extendEdges(uri: String): Seq[Edge] = for {
     extendedType <- classLikeDeclaration.inheritedTypes
-    sourceNode    = extendedType.simpleNameNode.getOrElse(extendedType)
+    sourceNode = extendedType.simpleNameNode.getOrElse(extendedType)
     qualifiedName = extendedType.resolveQualifiedNameOption.getOrElse(extendedType.getNameAsString)
   } yield sourceNode.edge(targetId = qualifiedName, edgeKind = EdgeKind.EXTEND, uri = uri)
 
@@ -78,7 +83,7 @@ extension (classLikeDeclaration: ClassLikeDeclaration)(
       variableDeclarator =>
         for {
           simpleName <- variableDeclarator.simpleNameNode
-          signature  <- variableDeclarator.getQualifiedSignature(uri)
+          signature <- variableDeclarator.getQualifiedSignature(uri)
         } yield simpleName.edge(targetId = signature, edgeKind = EdgeKind.DECLARATION, uri)
     }
   }
@@ -94,15 +99,14 @@ extension (classLikeDeclaration: ClassLikeDeclaration)(
   def classLikeDeclarations: Seq[ClassLikeDeclaration] = classLikeDeclaration.allNodesOf[ClassOrInterfaceDeclaration] ++
     classLikeDeclaration.allNodesOf[EnumDeclaration]
 
-  def innerDeclarationEdges(uri: String): Seq[Edge] = classLikeDeclaration
-    .classLikeDeclarations
+  def innerDeclarationEdges(uri: String): Seq[Edge] = classLikeDeclaration.classLikeDeclarations
     .filter(innerDeclaration =>
       innerDeclaration.isInnerDeclaration && innerDeclaration.getQualifiedSignature != classLikeDeclaration.getQualifiedSignature
     )
     .flatMap { innerDeclaration =>
       for {
         simpleName <- innerDeclaration.simpleNameNode
-        signature  <- innerDeclaration.getQualifiedSignature
+        signature <- innerDeclaration.getQualifiedSignature
       } yield simpleName.edge(targetId = signature, edgeKind = EdgeKind.DECLARATION, uri)
     }
 
@@ -130,8 +134,8 @@ extension (classLikeDeclaration: ClassLikeDeclaration)(
 
 }
 
-extension (coid: ClassOrInterfaceDeclaration)(
-  using logger: Logger
+extension (coid: ClassOrInterfaceDeclaration)(using
+  logger: Logger
 ) {
   def kind: NodeKind = if (coid.isInterface) NodeKind.TRAIT else NodeKind.CLASS
 
@@ -144,8 +148,8 @@ extension (coid: ClassOrInterfaceDeclaration)(
 
   def extendTypeArgumentEdges(uri: String): Seq[Edge] = {
     for {
-      extendedType         <- coid.inheritedTypes
-      typeArgument         <- extendedType.typeArguments
+      extendedType <- coid.inheritedTypes
+      typeArgument <- extendedType.typeArguments
       resolvedTypeArgument <- typeArgument.resolveOption
     } yield typeArgument.edge(
       targetId = resolvedTypeArgument.getQualifiedName,
@@ -196,24 +200,24 @@ extension (coid: ClassOrInterfaceDeclaration)(
 
 }
 
-extension (e: EnumDeclaration)(
-  using logger: Logger
+extension (e: EnumDeclaration)(using
+  logger: Logger
 ) {
   def kind: NodeKind = NodeKind.ENUM
 
   def enumConstants: Seq[EnumConstantDeclaration] = e.getEntries.asScala.toSeq
 
   def enumConstantDeclarationEdges(uri: String): Seq[Edge] = for {
-    ec             <- e.enumConstants
-    signature      <- ec.getQualifiedSignature
+    ec <- e.enumConstants
+    signature <- ec.getQualifiedSignature
     simpleNameNode <- ec.simpleNameNode
   } yield simpleNameNode.edge(targetId = signature, edgeKind = EdgeKind.DECLARATION, uri)
 
   def getDeclarationAsHTML: String = "enum ".asModifier + e.getName
 }
 
-extension (variable: VariableDeclarator)(
-  using logger: Logger
+extension (variable: VariableDeclarator)(using
+  logger: Logger
 ) {
 
   def kind: NodeKind = {
@@ -233,7 +237,7 @@ extension (variable: VariableDeclarator)(
 
   def declarationEdge(uri: String): Option[Edge] = for {
     simpleNameNode <- variable.simpleNameNode
-    qs             <- variable.getQualifiedSignature(uri)
+    qs <- variable.getQualifiedSignature(uri)
   } yield simpleNameNode.edge(targetId = qs, edgeKind = EdgeKind.DECLARATION, uri = uri)
 
   private def getAccessModifiers(decl: Node): String = decl match {
@@ -275,13 +279,13 @@ extension (variable: VariableDeclarator)(
 
 }
 
-extension (node: Node with NodeWithSimpleName[_ <: Node] with Resolvable[_ <: ResolvedValueDeclaration])(
-  using logger: Logger
+extension (node: Node with NodeWithSimpleName[_ <: Node] with Resolvable[_ <: ResolvedValueDeclaration])(using
+  logger: Logger
 ) {
 
   def signatureWithCoordinates: String = {
     val coordinates = node.simpleNameCoordinates.orElse(node.coordinates).getOrElse("UNKNOWN")
-    val name        = node.getNameAsString
+    val name = node.getNameAsString
     s"$name@$coordinates"
   }
 
@@ -307,19 +311,19 @@ extension (node: Node with NodeWithSimpleName[_ <: Node] with Resolvable[_ <: Re
 
     ancestorSignature <- wrappedNode.closestPossiblyDeclaringAncestorSignature
     isParameter = node.isParameterOf(ancestorNode)
-    separator   = if isParameter then "!" else "?"
+    separator = if isParameter then "!" else "?"
   } yield s"$ancestorSignature$separator$fieldName"
 
 }
 
-extension (explConstructorInv: ExplicitConstructorInvocationStmt)(
-  using logger: Logger
+extension (explConstructorInv: ExplicitConstructorInvocationStmt)(using
+  logger: Logger
 ) {
   def isSuperStmt: Boolean = explConstructorInv.toString.startsWith("super")
 }
 
-extension (parameter: Parameter)(
-  using logger: Logger
+extension (parameter: Parameter)(using
+  logger: Logger
 ) {
 
   def kind: NodeKind = (parameter.treatedAsVariable, parameter.isFinal) match {
@@ -338,29 +342,29 @@ extension (parameter: Parameter)(
   def signature: String = (
     for {
       coordinates <- parameter.simpleNameCoordinates.orElse(parameter.coordinates)
-      name              = parameter.getNameAsString
+      name = parameter.getNameAsString
       treatedAsVariable = parameter.treatedAsVariable
     } yield if treatedAsVariable then s"$name@$coordinates" else name
   ).getOrElse(parameter.getNameAsString)
 
   def getQualifiedSignature: Option[String] = for {
     ancestorSignature <- parameter.closestPossiblyDeclaringAncestorSignature
-    signature      = parameter.signature
+    signature = parameter.signature
     nodeTypeMarker = if parameter.treatedAsVariable then "?" else "!"
   } yield s"$ancestorSignature$nodeTypeMarker$signature"
 
   def parameterEdge(uri: String): Option[Edge] = for {
     simpleNameNode <- parameter.simpleNameNode
-    signature      <- parameter.getQualifiedSignature
+    signature <- parameter.getQualifiedSignature
   } yield simpleNameNode.edge(targetId = signature, edgeKind = EdgeKind.PARAMETER, uri = uri)
 
   def declarationEdge(uri: String): Option[Edge] = for {
     simpleNameNode <- parameter.simpleNameNode
-    qs             <- parameter.getQualifiedSignature
+    qs <- parameter.getQualifiedSignature
   } yield simpleNameNode.edge(targetId = qs, edgeKind = EdgeKind.DECLARATION, uri = uri)
 
   def getDeclarationAsHTML: String = {
-    val annotations   = parameter.getAnnotations.asScala.map(_.toString.asAnnotation + " ").mkString
+    val annotations = parameter.getAnnotations.asScala.map(_.toString.asAnnotation + " ").mkString
     val parameterType = TooltipUtils.colorGenericTypes(parameter.scopeTypeParameters, parameter.getType.toString + " ")
     val parameterName = parameter.getName.toString
     TooltipUtils.colorizeSpecialKeywords(annotations + parameterType + parameterName)
@@ -368,8 +372,8 @@ extension (parameter: Parameter)(
 
 }
 
-extension (methodLike: MethodLikeDeclaration)(
-  using logger: Logger
+extension (methodLike: MethodLikeDeclaration)(using
+  logger: Logger
 ) {
 
   def getQualifiedSignature: String =
@@ -399,8 +403,7 @@ extension (methodLike: MethodLikeDeclaration)(
   def variableDeclarationEdges(uri: String): Seq[Edge] = methodLike.declaredVariables.flatMap(_.declarationEdge(uri)) ++
     methodLike.childParametersTreatedAsVariables.flatMap(_.declarationEdge(uri))
 
-  def returnTypeEdge(uri: String): Option[Edge] = methodLike
-    .typeNameNode
+  def returnTypeEdge(uri: String): Option[Edge] = methodLike.typeNameNode
     .orElse(methodLike.typeNode)
     .orElse(methodLike.simpleNameNode)
     .map(_.edge(targetId = methodLike.typeQualifiedSignature, EdgeKind.RETURN_TYPE, uri))
@@ -410,8 +413,7 @@ extension (methodLike: MethodLikeDeclaration)(
     case m: MethodDeclaration      => m.typeArgumentEdges(uri)
   }
 
-  def declarationEdge(uri: String): Option[Edge] = methodLike
-    .simpleNameNode
+  def declarationEdge(uri: String): Option[Edge] = methodLike.simpleNameNode
     .orElse(Some(methodLike))
     .map(_.edge(targetId = methodLike.getQualifiedSignature, EdgeKind.DECLARATION, uri))
 
@@ -464,9 +466,9 @@ extension (methodLike: MethodLikeDeclaration)(
     methodLike match {
       case method: MethodDeclaration =>
         for {
-          declaringClass                      <- method.getDeclaringClass.toSeq
+          declaringClass <- method.getDeclaringClass.toSeq
           inheritedType: ClassOrInterfaceType <- declaringClass.inheritedTypes
-          resolvedType                        <- inheritedType.resolveOption.toSeq
+          resolvedType <- inheritedType.resolveOption.toSeq
           resolvedReferenceType <- (resolvedType match {
             case rrt: ResolvedReferenceType => Some(rrt)
             case _                          => None
@@ -487,8 +489,8 @@ extension (methodLike: MethodLikeDeclaration)(
 
 }
 
-extension (stmt: ExplicitConstructorInvocationStmt)(
-  using logger: Logger
+extension (stmt: ExplicitConstructorInvocationStmt)(using
+  logger: Logger
 ) {
 
   def superLocation(uri: String): Option[Location] = {
@@ -499,14 +501,14 @@ extension (stmt: ExplicitConstructorInvocationStmt)(
 
 }
 
-extension (packageDeclaration: PackageDeclaration)(
-  using logger: Logger
+extension (packageDeclaration: PackageDeclaration)(using
+  logger: Logger
 ) {
   def asPath: Path = packageDeclaration.getNameAsString.split("\\.").mkString(File.separator).toPath
 }
 
-extension (initializerDeclaration: InitializerDeclaration)(
-  using logger: Logger
+extension (initializerDeclaration: InitializerDeclaration)(using
+  logger: Logger
 ) {
 
   def getQualifiedSignature(orderNumber: Int): Option[String] =
@@ -520,8 +522,8 @@ extension (initializerDeclaration: InitializerDeclaration)(
 
 }
 
-extension (method: MethodDeclaration)(
-  using logger: Logger
+extension (method: MethodDeclaration)(using
+  logger: Logger
 ) {
 
   def hasTheSameSignature(otherMethod: MethodDeclaration): Boolean = {

@@ -1,6 +1,11 @@
 package com.virtuslab.semanticgraphs.javaparser.solver.declaration
 
-import com.virtuslab.semanticgraphs.javaparser.solver.declaration.{ DummyMethodResolutionCapability, DummyResolvedTypeDeclaration, DummyResolvedTypeParametrizable, DummyTypeDeclaration }
+import com.virtuslab.semanticgraphs.javaparser.solver.declaration.{
+  DummyMethodResolutionCapability,
+  DummyResolvedTypeDeclaration,
+  DummyResolvedTypeParametrizable,
+  DummyTypeDeclaration
+}
 import com.virtuslab.semanticgraphs.javaparser.solver.TypeArgumentsResolutionCache
 
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration

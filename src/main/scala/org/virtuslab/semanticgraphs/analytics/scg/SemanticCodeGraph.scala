@@ -104,10 +104,9 @@ object SemanticCodeGraph:
     projectAndVersion: ProjectAndVersion,
     nodeFilter: GraphNode => Boolean = SemanticCodeGraph.isNodeDefinedInProject,
     edgeFilter: Edge => Boolean = SemanticCodeGraph.isEdgeDefinedInProject
-  ) = {
+  ) =
     if projectAndVersion.workspace.endsWith(".zip") then fromZip(projectAndVersion, nodeFilter, edgeFilter)
     else fromDir(projectAndVersion, nodeFilter, edgeFilter)
-  }
 
   private def fromDir(
     projectAndVersion: ProjectAndVersion,
@@ -154,11 +153,11 @@ object SemanticCodeGraph:
       } // filter out edges pointing to outside nodes
     new SemanticCodeGraph(projectAndVersion, nodesMap.toMap)
 
-
   def readLOC(
     projectAndVersion: ProjectAndVersion
   ): Long =
-    if projectAndVersion.projectName.endsWith(".zip") then readLOCFromZip(projectAndVersion) else readLOCFromDir(projectAndVersion)
+    if projectAndVersion.projectName.endsWith(".zip") then readLOCFromZip(projectAndVersion)
+    else readLOCFromDir(projectAndVersion)
 
   private def readLOCFromDir(
     projectAndVersion: ProjectAndVersion

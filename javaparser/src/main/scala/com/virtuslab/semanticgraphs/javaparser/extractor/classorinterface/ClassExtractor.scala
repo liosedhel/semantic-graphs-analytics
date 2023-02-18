@@ -1,16 +1,21 @@
 package com.virtuslab.semanticgraphs.javaparser.extractor.classorinterface
 
-import com.virtuslab.semanticgraphs.javaparser.extractor.{ EdgeKind, NodeKind }
+import com.virtuslab.semanticgraphs.javaparser.extractor.{EdgeKind, NodeKind}
 import com.virtuslab.semanticgraphs.javaparser.extractor.generics.GenericsExtractor
 import com.virtuslab.semanticgraphs.javaparser.extractor.initializer.InitializerExtractor
 import com.virtuslab.semanticgraphs.javaparser.extractor.method.MethodLikeExtractor
 import com.virtuslab.semanticgraphs.javaparser.extractor.utils.*
 import com.virtuslab.semanticgraphs.javaparser.extractor.value.VariableExtractor
 import com.virtuslab.semanticgraphs.parsercommon.logger.GraphBuddyLogging
-import com.virtuslab.semanticgraphs.proto.model.graphnode.{ Edge, GraphNode, Location }
+import com.virtuslab.semanticgraphs.proto.model.graphnode.{Edge, GraphNode, Location}
 
 import com.github.javaparser.ast.`type`.ClassOrInterfaceType
-import com.github.javaparser.ast.body.{ CallableDeclaration, ClassOrInterfaceDeclaration, ConstructorDeclaration, MethodDeclaration }
+import com.github.javaparser.ast.body.{
+  CallableDeclaration,
+  ClassOrInterfaceDeclaration,
+  ConstructorDeclaration,
+  MethodDeclaration
+}
 
 import scala.collection.mutable
 import scala.jdk.CollectionConverters.*
@@ -22,9 +27,7 @@ object ClassExtractor extends GraphBuddyLogging:
 
   def createClass(coids: Iterable[ClassOrInterfaceDeclaration], uri: String): Iterable[GraphNode] = {
     coids.flatMap(coid => {
-      coid
-        .getQualifiedSignature
-        .toSeq
+      coid.getQualifiedSignature.toSeq
         .map(signature => {
           GraphNode(
             id = signature,
@@ -47,12 +50,12 @@ object ClassExtractor extends GraphBuddyLogging:
 
   private def createProperties(coid: ClassOrInterfaceDeclaration): Map[String, String] = {
     Map(
-      "inner class"                    -> coid.isInnerClass.toString,
-      "isAbstract"                     -> coid.isAbstract.toString,
-      "isFinal"                        -> coid.isFinal.toString,
-      "access"                         -> coid.getAccessSpecifier.toString.toLowerCase,
-      "declarationString"              -> coid.getDeclarationAsHTML,
-      "LOC"                            -> coid.getLOC
+      "inner class" -> coid.isInnerClass.toString,
+      "isAbstract" -> coid.isAbstract.toString,
+      "isFinal" -> coid.isFinal.toString,
+      "access" -> coid.getAccessSpecifier.toString.toLowerCase,
+      "declarationString" -> coid.getDeclarationAsHTML,
+      "LOC" -> coid.getLOC
     ) ++ coid.getPackage.map("package" -> _)
   }
 

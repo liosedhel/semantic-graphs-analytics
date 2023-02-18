@@ -1,7 +1,12 @@
 package org.virtuslab.semanticgraphs.analytics.partitions.gpmetis
 
 import com.virtuslab.semanticgraphs.proto.model.graphnode.GraphNode
-import org.virtuslab.semanticgraphs.analytics.partitions.{DockerDistribution, GraphNodeDTO, PartitionHelpers, PartitionResults}
+import org.virtuslab.semanticgraphs.analytics.partitions.{
+  DockerDistribution,
+  GraphNodeDTO,
+  PartitionHelpers,
+  PartitionResults
+}
 import org.virtuslab.semanticgraphs.analytics.scg.{ProjectAndVersion, SemanticCodeGraph}
 import org.virtuslab.semanticgraphs.analytics.utils.MultiPrinter
 import org.virtuslab.semanticgraphs.analytics.partitions.GraphNodeDTO.toGraphNodeDto
@@ -18,9 +23,11 @@ object GpmetisPartitionsApp extends App:
   implicit val (tmpFolder: File, multiPrinter: MultiPrinter) = PartitionHelpers.multiPrinter(projectName, "gpmetis")
 
   val biggestComponentNodes =
-    PartitionHelpers.takeBiggestComponentOnly(
-      SemanticCodeGraph.readOnlyGlobalNodes(ProjectAndVersion(workspace, projectName, ""))
-    ).map(_.toGraphNodeDto)
+    PartitionHelpers
+      .takeBiggestComponentOnly(
+        SemanticCodeGraph.readOnlyGlobalNodes(ProjectAndVersion(workspace, projectName, ""))
+      )
+      .map(_.toGraphNodeDto)
 
   val results = GpmetisPartitions.partition(biggestComponentNodes, projectName, nparts, false)
 
@@ -47,18 +54,42 @@ object GpmetisPartitionsApp extends App:
 
 object GpmetisPartitions:
 
-  def partition(nodes: List[GraphNodeDTO], projectName: String, nparts: Int, useDocker: Boolean): List[PartitionResults] =
+  def partition(
+    nodes: List[GraphNodeDTO],
+    projectName: String,
+    nparts: Int,
+    useDocker: Boolean
+  ): List[PartitionResults] =
     val indexes = SpectralGraphUtils.exportToSpectralGraph(projectName, nodes)
     val result = GpmetisPartitions.computePartitioning(nodes, indexes, nparts, projectName, useDocker)
     new File(s"$projectName.gpmetis").delete()
     result
 
-  def computePartitioning(nodes: List[GraphNodeDTO], indexes: Array[String], nparts: Int, projectName: String, useDocker: Boolean): List[PartitionResults] =
+  def computePartitioning(
+    nodes: List[GraphNodeDTO],
+    indexes: Array[String],
+    nparts: Int,
+    projectName: String,
+    useDocker: Boolean
+  ): List[PartitionResults] =
     if nparts > 1 then
       val computing =
         if useDocker then
-          os.proc("docker", "run", "--rm", "-v", os.pwd.toString + "/:/data", DockerDistribution.dockerImage, "gpmetis", "-ptype=kway", "-contig", "-objtype=cut", "-ufactor=1000", s"$projectName.gpmetis", nparts)
-            .call()
+          os.proc(
+            "docker",
+            "run",
+            "--rm",
+            "-v",
+            os.pwd.toString + "/:/data",
+            DockerDistribution.dockerImage,
+            "gpmetis",
+            "-ptype=kway",
+            "-contig",
+            "-objtype=cut",
+            "-ufactor=1000",
+            s"$projectName.gpmetis",
+            nparts
+          ).call()
         else
           os.proc("gpmetis", "-ptype=kway", "-contig", "-objtype=cut", "-ufactor=1000", s"$projectName.gpmetis", nparts)
             .call()

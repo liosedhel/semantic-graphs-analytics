@@ -4,12 +4,12 @@ import ch.qos.logback.classic.Logger
 
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 enum LogLevel {
 
-  def getLogMethod(
-    using logger: Logger
+  def getLogMethod(using
+    logger: Logger
   ): String => Unit = {
     this match {
       case TRACE => logger.trace
@@ -24,8 +24,8 @@ enum LogLevel {
   case TRACE, DEBUG, INFO, WARN, ERROR
 }
 
-extension [T](t: Try[T])(
-  using logger: Logger
+extension [T](t: Try[T])(using
+  logger: Logger
 ) {
   def toSeq: Seq[T] = t.toOption.toSeq
 

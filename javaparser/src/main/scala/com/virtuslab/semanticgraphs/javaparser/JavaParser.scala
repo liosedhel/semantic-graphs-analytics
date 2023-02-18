@@ -3,33 +3,37 @@ package com.virtuslab.semanticgraphs.javaparser
 import com.virtuslab.semanticgraphs.javaparser.extractor.`enum`.EnumExtractor
 import com.virtuslab.semanticgraphs.javaparser.extractor.classorinterface.ClassExtractor
 import com.virtuslab.semanticgraphs.javaparser.extractor.utils.*
-import com.virtuslab.semanticgraphs.javaparser.solver.{ DummyExternalDependenciesTypeSolver, EDMTSCompatibleSymbolSolver }
+import com.virtuslab.semanticgraphs.javaparser.solver.{DummyExternalDependenciesTypeSolver, EDMTSCompatibleSymbolSolver}
 import com.virtuslab.semanticgraphs.javaparser.FileManager.*
 import com.virtuslab.semanticgraphs.javaparser.JavaParserWithCaches
-import com.virtuslab.semanticgraphs.parsercommon.{ toPath, FileOperations }
+import com.virtuslab.semanticgraphs.parsercommon.{toPath, FileOperations}
 import com.virtuslab.semanticgraphs.parsercommon.logger.GraphBuddyLogging
-import com.virtuslab.semanticgraphs.parsercommon.versioning.{ FileVersion, FileVersionFromFile, FileVersionStamp }
-import com.virtuslab.semanticgraphs.proto.model.graphnode.{ GraphNode, Location, SemanticGraphFile }
+import com.virtuslab.semanticgraphs.parsercommon.versioning.{FileVersion, FileVersionFromFile, FileVersionStamp}
+import com.virtuslab.semanticgraphs.proto.model.graphnode.{GraphNode, Location, SemanticGraphFile}
 
-import com.github.javaparser.{ JavaParser, ParserConfiguration, StaticJavaParser }
-import com.github.javaparser.ast.body.{ ClassOrInterfaceDeclaration, EnumDeclaration }
+import com.github.javaparser.{JavaParser, ParserConfiguration, StaticJavaParser}
+import com.github.javaparser.ast.body.{ClassOrInterfaceDeclaration, EnumDeclaration}
 import com.github.javaparser.ast.CompilationUnit
-import com.github.javaparser.symbolsolver.resolution.typesolvers.{ CombinedTypeSolver, JavaParserTypeSolver, ReflectionTypeSolver }
+import com.github.javaparser.symbolsolver.resolution.typesolvers.{
+  CombinedTypeSolver,
+  JavaParserTypeSolver,
+  ReflectionTypeSolver
+}
 import com.github.javaparser.symbolsolver.JavaSymbolSolver
 import com.github.javaparser.utils.SourceRoot
 import com.github.javaparser.ParserConfiguration.LanguageLevel
 
-import java.io.{ File, InputStream, StringReader }
-import java.nio.file.{ Files, Path, Paths }
+import java.io.{File, InputStream, StringReader}
+import java.nio.file.{Files, Path, Paths}
 import java.util.concurrent.atomic.AtomicInteger
 import java.util.regex.Pattern
-import scala.concurrent.{ Await, Future }
+import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.*
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.io.Source
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
-import scala.util.{ Failure, Success, Try }
+import scala.util.{Failure, Success, Try}
 
 object JavaParser extends GraphBuddyLogging {
 
@@ -51,7 +55,7 @@ object JavaParser extends GraphBuddyLogging {
 
     combinedTypeSolver.add(dummyTypeSolver)
 
-    val symbolSolver        = JavaSymbolSolver(combinedTypeSolver)
+    val symbolSolver = JavaSymbolSolver(combinedTypeSolver)
     val wrappedSymbolSolver = EDMTSCompatibleSymbolSolver(symbolSolver, dummyTypeSolver)
 
     new ParserConfiguration().setSymbolResolver(wrappedSymbolSolver).setLanguageLevel(LanguageLevel.CURRENT)
@@ -111,7 +115,7 @@ object JavaParser extends GraphBuddyLogging {
     *   all `.java` files in directory and subdirectories
     */
   def getSourceFiles(rootPathString: String): Seq[File] = {
-    val projectPath      = rootPathString.toPath
+    val projectPath = rootPathString.toPath
     val graphBuddyIgnore = GraphBuddyIgnore.get(projectPath)
     FileOperations
       .getFileTree(projectPath.toFile)
@@ -128,8 +132,8 @@ object JavaParser extends GraphBuddyLogging {
     */
   private def getSourceDirectories(
     rootPathString: String
-  )(
-    implicit maybeParser: Option[JavaParserWithCaches] = None,
+  )(implicit
+    maybeParser: Option[JavaParserWithCaches] = None,
     maybeDummyTypeSolver: Option[DummyExternalDependenciesTypeSolver] = None
   ): Seq[Path] = getSourceFiles(rootPathString)
     .map { file =>

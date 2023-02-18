@@ -1,6 +1,6 @@
 package com.virtuslab.semanticgraphs.javaparser.extractor.`enum`
 
-import com.virtuslab.semanticgraphs.javaparser.extractor.{ EdgeKind, NodeKind }
+import com.virtuslab.semanticgraphs.javaparser.extractor.{EdgeKind, NodeKind}
 import com.virtuslab.semanticgraphs.javaparser.extractor.utils.*
 import com.virtuslab.semanticgraphs.javaparser.extractor.NodeKind
 import com.virtuslab.semanticgraphs.parsercommon.logger.GraphBuddyLogging
@@ -20,8 +20,7 @@ import scala.util.Try
 object EnumConstantExtractor extends GraphBuddyLogging {
 
   def createNodes(enumConstants: Iterable[EnumConstantDeclaration], uri: String): Seq[GraphNode] = {
-    enumConstants
-      .toSeq
+    enumConstants.toSeq
       .flatMap(ec => {
         ec.getQualifiedSignature.toSeq.map { ecSignature =>
           GraphNode(
@@ -38,7 +37,7 @@ object EnumConstantExtractor extends GraphBuddyLogging {
 
   private def createProperties(declaration: EnumConstantDeclaration): Map[String, String] = Map(
     "enum" -> true.toString,
-    "LOC"  -> declaration.getRange.toScala.map(r => r.end.line - r.begin.line).getOrElse(0).toString
+    "LOC" -> declaration.getRange.toScala.map(r => r.end.line - r.begin.line).getOrElse(0).toString
   )
 
 }

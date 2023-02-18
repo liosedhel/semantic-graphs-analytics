@@ -1,12 +1,17 @@
 package com.virtuslab.semanticgraphs.javaparser.solver.declaration
 
-import com.github.javaparser.resolution.declarations.{ ResolvedConstructorDeclaration, ResolvedFieldDeclaration, ResolvedMethodDeclaration, ResolvedReferenceTypeDeclaration }
-import com.github.javaparser.resolution.types.{ ResolvedReferenceType, ResolvedType }
+import com.github.javaparser.resolution.declarations.{
+  ResolvedConstructorDeclaration,
+  ResolvedFieldDeclaration,
+  ResolvedMethodDeclaration,
+  ResolvedReferenceTypeDeclaration
+}
+import com.github.javaparser.resolution.types.{ResolvedReferenceType, ResolvedType}
 import com.github.javaparser.symbolsolver.logic.AbstractTypeDeclaration
 
 import java.util
-import java.util.{ Optional, UUID }
-import scala.collection.{ concurrent, mutable }
+import java.util.{Optional, UUID}
+import scala.collection.{concurrent, mutable}
 import scala.collection.concurrent.TrieMap
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*

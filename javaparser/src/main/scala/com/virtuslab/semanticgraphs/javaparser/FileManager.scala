@@ -4,8 +4,8 @@ import com.virtuslab.semanticgraphs.javaparser.extractor.utils.*
 import com.virtuslab.semanticgraphs.parsercommon.toPath
 import com.virtuslab.semanticgraphs.proto.model.graphnode.SemanticGraphFile
 
-import java.io.{ File, FileOutputStream }
-import java.nio.file.{ Path, Paths }
+import java.io.{File, FileOutputStream}
+import java.nio.file.{Path, Paths}
 import scala.jdk.CollectionConverters.IteratorHasAsScala
 
 object FileManager:
@@ -50,7 +50,7 @@ object FileManager:
     */
   def relativizeSrcToPackageLevel(filePath: String): String = {
     val fileSeparator = File.separator
-    val pathParts     = filePath.toPath.nameElements.map(_.toString)
+    val pathParts = filePath.toPath.nameElements.map(_.toString)
     val cutoffPosition = pathParts match {
       case pp if pp.contains("src")  => pathParts.indexOf("src")
       case pp if pp.contains("main") => pathParts.indexOf("main")

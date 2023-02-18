@@ -1,6 +1,6 @@
 package com.virtuslab.semanticgraphs.javaparser.extractor.utils
 
-import com.virtuslab.semanticgraphs.javaparser.{ FileManager, JavaParserWithCaches }
+import com.virtuslab.semanticgraphs.javaparser.{FileManager, JavaParserWithCaches}
 import com.virtuslab.semanticgraphs.javaparser.solver.DummyExternalDependenciesTypeSolver
 import com.virtuslab.semanticgraphs.parsercommon.toPath
 
@@ -8,7 +8,7 @@ import com.github.javaparser.ast.PackageDeclaration
 import com.github.javaparser.StaticJavaParser
 
 import java.io.File
-import java.nio.file.{ Path, Paths }
+import java.nio.file.{Path, Paths}
 import scala.annotation.tailrec
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
@@ -18,8 +18,8 @@ import scala.util.Try
 extension (file: File)
   def getParentDirectory: Option[File] = Option(file.getParentFile).orElse(Some(file)).filter(_.isDirectory)
 
-  def parseJavaPackageDeclarationAndUpdateResolverCache(
-    implicit maybeParser: Option[JavaParserWithCaches] = None,
+  def parseJavaPackageDeclarationAndUpdateResolverCache(implicit
+    maybeParser: Option[JavaParserWithCaches] = None,
     maybeDummyTypeSolver: Option[DummyExternalDependenciesTypeSolver] = None
   ): Option[PackageDeclaration] = {
     (maybeParser match {
@@ -44,7 +44,7 @@ extension (path: Path)
 
   def nameElements = path.iterator.asScala.toSeq
 
-  def isValidJavaIdentifier: Boolean        = FileUtils.JavaIdentifierRegex.matches(path.toString)
+  def isValidJavaIdentifier: Boolean = FileUtils.JavaIdentifierRegex.matches(path.toString)
   def endsWithAValidJavaIdentifier: Boolean = path.nameElements.lastOption.exists(_.isValidJavaIdentifier)
 
   def lastValidJavaIdentifierDirectory: Option[Path] = {

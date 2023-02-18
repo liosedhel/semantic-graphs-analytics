@@ -1,22 +1,26 @@
 package com.virtuslab.semanticgraphs.javaparser.extractor.utils
 
-import com.virtuslab.semanticgraphs.javaparser.extractor.{ EdgeKind, NodeKind }
+import com.virtuslab.semanticgraphs.javaparser.extractor.{EdgeKind, NodeKind}
 import com.virtuslab.semanticgraphs.javaparser.extractor.utils.*
-import com.virtuslab.semanticgraphs.proto.model.graphnode.{ Edge, Location }
+import com.virtuslab.semanticgraphs.proto.model.graphnode.{Edge, Location}
 
 import ch.qos.logback.classic.Logger
-import com.github.javaparser.ast.`type`.{ ClassOrInterfaceType, PrimitiveType, Type, TypeParameter }
+import com.github.javaparser.ast.`type`.{ClassOrInterfaceType, PrimitiveType, Type, TypeParameter}
 import com.github.javaparser.ast.body.*
 import com.github.javaparser.ast.expr.*
-import com.github.javaparser.ast.nodeTypes.{ NodeWithName, NodeWithType, NodeWithTypeArguments, NodeWithTypeParameters }
+import com.github.javaparser.ast.nodeTypes.{NodeWithName, NodeWithType, NodeWithTypeArguments, NodeWithTypeParameters}
 import com.github.javaparser.ast.stmt.ExplicitConstructorInvocationStmt
 import com.github.javaparser.ast.Node
 import com.github.javaparser.resolution.declarations.*
 import com.github.javaparser.resolution.declarations.ResolvedTypeParameterDeclaration.Bound
-import com.github.javaparser.resolution.types.{ ResolvedReferenceType, ResolvedType, ResolvedTypeVariable }
+import com.github.javaparser.resolution.types.{ResolvedReferenceType, ResolvedType, ResolvedTypeVariable}
 import com.github.javaparser.resolution.types.parametrization.ResolvedTypeParametrized
 import com.github.javaparser.resolution.Resolvable
-import com.github.javaparser.symbolsolver.javaparsermodel.declarations.{ JavaParserFieldDeclaration, JavaParserParameterDeclaration, JavaParserVariableDeclaration }
+import com.github.javaparser.symbolsolver.javaparsermodel.declarations.{
+  JavaParserFieldDeclaration,
+  JavaParserParameterDeclaration,
+  JavaParserVariableDeclaration
+}
 
 import java.util
 import java.util.Optional
@@ -24,19 +28,17 @@ import scala.annotation.targetName
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
 import scala.language.implicitConversions
-import scala.reflect.{ classTag, ClassTag }
-import scala.util.{ Failure, Success, Try }
+import scala.reflect.{classTag, ClassTag}
+import scala.util.{Failure, Success, Try}
 
 extension [N <: Node, T <: Type, R <: ResolvedDeclaration](
   node: N with NodeWithType[N, T] with Resolvable[R]
-)(
-  using logger: Logger
+)(using
+  logger: Logger
 ) {
 
   def getTypeFullyQualifiedName: String = {
-    def fallback: String = node
-      .getType
-      .resolveTry
+    def fallback: String = node.getType.resolveTry
       .flatMap(r => Try(r.describe()))
       .getOrElse(node.getTypeAsString)
       .split('<')
@@ -82,8 +84,8 @@ extension [N <: Node, T <: Type, R <: ResolvedDeclaration](
 
 extension [N <: Node, R <: ResolvedTypeParametrizable](
   node: Node with NodeWithTypeParameters[N] with Resolvable[R]
-)(
-  using logger: Logger
+)(using
+  logger: Logger
 ) {
   def typeParameters: Seq[TypeParameter] = node.getTypeParameters.iterator().asScala.toSeq
 
@@ -92,8 +94,7 @@ extension [N <: Node, R <: ResolvedTypeParametrizable](
 
   def typeParameterEdges(uri: String): Seq[Edge] = for {
     (typeParameter, resolvedTypeParameter) <- typeParameters zip resolvedTypeParameters
-    edge <- typeParameter
-      .simpleNameNode
+    edge <- typeParameter.simpleNameNode
       .flatMap(sn => {
         Try(
           sn.edge(targetId = resolvedTypeParameter.getQualifiedName, edgeKind = EdgeKind.TYPE_PARAMETER, uri = uri)
@@ -104,8 +105,8 @@ extension [N <: Node, R <: ResolvedTypeParametrizable](
 
 }
 
-extension (resolvedType: ResolvedType)(
-  using logger: Logger
+extension (resolvedType: ResolvedType)(using
+  logger: Logger
 ) {
 
   def getQualifiedName: String = Try {
@@ -122,36 +123,35 @@ extension (resolvedType: ResolvedType)(
   }
 
   def allTypeArguments: Seq[ResolvedType] = {
-    def recExtractTypeArguments(current: ResolvedType): Seq[ResolvedType] = {
+    def recExtractTypeArguments(current: ResolvedType): Seq[ResolvedType] =
       if current.typeArguments.nonEmpty then Seq(current) ++ current.typeArguments.flatMap(recExtractTypeArguments)
       else Seq(current)
-    }
     recExtractTypeArguments(resolvedType)
   }
 
 }
 
-extension (rtp: ResolvedTypeParametrized)(
-  using logger: Logger
+extension (rtp: ResolvedTypeParametrized)(using
+  logger: Logger
 ) {
   def typeParameters: Seq[ResolvedType] = rtp.typeParametersMap.getTypes.asScala.toSeq
 }
 
-extension (bound: Bound)(
-  using logger: Logger
+extension (bound: Bound)(using
+  logger: Logger
 ) {
   def getQualifiedName: String = bound.getType.getQualifiedName
-  def edgeKind: EdgeKind       = if bound.isExtends then EdgeKind.EXTEND else EdgeKind.SUPER
+  def edgeKind: EdgeKind = if bound.isExtends then EdgeKind.EXTEND else EdgeKind.SUPER
 }
 
-extension (coit: ClassOrInterfaceType)(
-  using logger: Logger
+extension (coit: ClassOrInterfaceType)(using
+  logger: Logger
 ) {
   def typeArguments: Seq[Type] = coit.getTypeArguments.toScala.toSeq.flatMap(_.asScala.toSeq)
 }
 
-extension (rmld: ResolvedMethodLikeDeclaration)(
-  using logger: Logger
+extension (rmld: ResolvedMethodLikeDeclaration)(using
+  logger: Logger
 ) {
 
   def qualifiedSignatureOption: Option[String] = rmld match {
@@ -161,8 +161,8 @@ extension (rmld: ResolvedMethodLikeDeclaration)(
 
 }
 
-extension (rrt: ResolvedReferenceType)(
-  using logger: Logger
+extension (rrt: ResolvedReferenceType)(using
+  logger: Logger
 ) {
 
   def allMethodsVisibleToInheritors: Seq[ResolvedMethodDeclaration] = Try(rrt.getAllMethodsVisibleToInheritors)

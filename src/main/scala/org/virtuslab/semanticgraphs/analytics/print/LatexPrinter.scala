@@ -1,6 +1,6 @@
 package org.virtuslab.semanticgraphs.analytics.print
 
-import org.virtuslab.semanticgraphs.analytics.crucial.{MetricIdAndDescription, CrucialNodesSummary, Statistic}
+import org.virtuslab.semanticgraphs.analytics.crucial.{CrucialNodesSummary, MetricIdAndDescription, Statistic}
 import org.virtuslab.semanticgraphs.analytics.scg.SemanticCodeGraph
 
 import java.nio.file.{Files, Path}
@@ -56,10 +56,10 @@ object LatexScoresPrinterApp extends App:
       .sortBy(summary => SemanticCodeGraph.allProjects.map(_.projectName).indexOf(summary.projectName))
 
   def printWholeTable(
-                       scgScores: List[CrucialNodesSummary],
-                       callScores: List[CrucialNodesSummary],
-                       fullCallScores: List[CrucialNodesSummary],
-                       metrics: List[MetricIdAndDescription]
+    scgScores: List[CrucialNodesSummary],
+    callScores: List[CrucialNodesSummary],
+    fullCallScores: List[CrucialNodesSummary],
+    metrics: List[MetricIdAndDescription]
   ) =
     // println(s"\\begin{tabular}{${"r|".repeat(metrics.size * 2 + 1)}}")
     println("\\hline")
@@ -107,10 +107,10 @@ object LatexCombinedPrinterApp extends App:
       .sortBy(summary => SemanticCodeGraph.allProjects.map(_.projectName).indexOf(summary.projectName))
 
   def printWholeTable(
-                       scgScores: List[CrucialNodesSummary],
-                       callScores: List[CrucialNodesSummary],
-                       fullCallScore: List[CrucialNodesSummary],
-                       n: Int
+    scgScores: List[CrucialNodesSummary],
+    callScores: List[CrucialNodesSummary],
+    fullCallScore: List[CrucialNodesSummary],
+    n: Int
   ) =
     // println(s"\\begin{tabular}{${"r|".repeat(metrics.size * 2 + 1)}}")
     println("\\hline")

@@ -1,7 +1,12 @@
 package org.virtuslab.semanticgraphs.analytics.partitions.patoh
 
 import com.virtuslab.semanticgraphs.proto.model.graphnode.GraphNode
-import org.virtuslab.semanticgraphs.analytics.partitions.{DockerDistribution, GraphNodeDTO, PartitionHelpers, PartitionResults}
+import org.virtuslab.semanticgraphs.analytics.partitions.{
+  DockerDistribution,
+  GraphNodeDTO,
+  PartitionHelpers,
+  PartitionResults
+}
 import org.virtuslab.semanticgraphs.analytics.scg.{ProjectAndVersion, SemanticCodeGraph}
 import org.virtuslab.semanticgraphs.analytics.utils.MultiPrinter
 import org.virtuslab.semanticgraphs.analytics.partitions.GraphNodeDTO.toGraphNodeDto
@@ -19,9 +24,11 @@ object PatohClustering extends App:
   implicit val (tmpFolder: File, multiPrinter: MultiPrinter) = PartitionHelpers.multiPrinter(projectName, "patoh")
 
   val biggestComponentNodes =
-    PartitionHelpers.takeBiggestComponentOnly(
-      SemanticCodeGraph.readOnlyGlobalNodes(ProjectAndVersion(workspace, projectName, ""))
-    ).map(_.toGraphNodeDto)
+    PartitionHelpers
+      .takeBiggestComponentOnly(
+        SemanticCodeGraph.readOnlyGlobalNodes(ProjectAndVersion(workspace, projectName, ""))
+      )
+      .map(_.toGraphNodeDto)
 
   val results = PatohPartitions.partition(biggestComponentNodes, projectName, nparts, false)
 
@@ -39,18 +46,40 @@ object PatohClustering extends App:
 
 object PatohPartitions:
 
-  def partition(nodes: List[GraphNodeDTO], projectName: String, nparts: Int, useDocker: Boolean): List[PartitionResults] =
+  def partition(
+    nodes: List[GraphNodeDTO],
+    projectName: String,
+    nparts: Int,
+    useDocker: Boolean
+  ): List[PartitionResults] =
     val indexes = PatohPartitions.exportPatohInputGraph(projectName, nodes)
     val result = computePatohPartitioning(nodes, indexes, nparts, projectName, useDocker)
     new File(s"$projectName.patoh").delete()
     result
 
-  def computePatohPartitioning(nodes: List[GraphNodeDTO], indexes: Array[String], nparts: Int, projectName: String, useDocker: Boolean): List[PartitionResults] =
+  def computePatohPartitioning(
+    nodes: List[GraphNodeDTO],
+    indexes: Array[String],
+    nparts: Int,
+    projectName: String,
+    useDocker: Boolean
+  ): List[PartitionResults] =
     if nparts > 1 then
       val computing =
         if useDocker then
-          os.proc("docker", "run", "--rm", "-v", os.pwd.toString + "/:/data", DockerDistribution.dockerImage, "patoh", s"$projectName.patoh", nparts, "IB=0.5", "PA=11")
-            .call()
+          os.proc(
+            "docker",
+            "run",
+            "--rm",
+            "-v",
+            os.pwd.toString + "/:/data",
+            DockerDistribution.dockerImage,
+            "patoh",
+            s"$projectName.patoh",
+            nparts,
+            "IB=0.5",
+            "PA=11"
+          ).call()
         else
           os.proc("patoh", s"$projectName.patoh", nparts, "IB=0.5", "PA=11")
             .call()

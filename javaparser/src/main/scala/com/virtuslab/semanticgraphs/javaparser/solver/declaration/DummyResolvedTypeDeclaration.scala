@@ -1,10 +1,10 @@
 package com.virtuslab.semanticgraphs.javaparser.solver.declaration
 
-import com.github.javaparser.resolution.declarations.{ ResolvedReferenceTypeDeclaration, ResolvedTypeDeclaration }
+import com.github.javaparser.resolution.declarations.{ResolvedReferenceTypeDeclaration, ResolvedTypeDeclaration}
 
 import java.util
-import java.util.{ Optional, UUID }
-import scala.collection.{ concurrent, mutable }
+import java.util.{Optional, UUID}
+import scala.collection.{concurrent, mutable}
 import scala.collection.concurrent.TrieMap
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*

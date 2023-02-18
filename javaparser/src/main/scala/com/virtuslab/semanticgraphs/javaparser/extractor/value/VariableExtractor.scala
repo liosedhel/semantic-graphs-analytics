@@ -1,6 +1,6 @@
 package com.virtuslab.semanticgraphs.javaparser.extractor.value
 
-import com.virtuslab.semanticgraphs.javaparser.extractor.{ EdgeKind, NodeKind }
+import com.virtuslab.semanticgraphs.javaparser.extractor.{EdgeKind, NodeKind}
 import com.virtuslab.semanticgraphs.javaparser.extractor.utils.*
 import com.virtuslab.semanticgraphs.parsercommon.logger.GraphBuddyLogging
 import com.virtuslab.semanticgraphs.proto.model.graphnode.GraphNode
@@ -38,14 +38,16 @@ object VariableExtractor extends GraphBuddyLogging {
 
   private def createProperties(declaration: VariableDeclarator): Map[String, String] = {
     declaration.getParentNode.asScala.fold(Map.empty) {
-      case expr: VariableDeclarationExpr => Map(
-          "type"    -> expr.getElementType.toString,
+      case expr: VariableDeclarationExpr =>
+        Map(
+          "type" -> expr.getElementType.toString,
           "isFinal" -> expr.isFinal.toString
         )
-      case expr: FieldDeclaration => Map(
-          "type"     -> expr.getElementType.toString,
-          "isFinal"  -> expr.isFinal.toString,
-          "access"   -> expr.getAccessSpecifier.toString.toLowerCase,
+      case expr: FieldDeclaration =>
+        Map(
+          "type" -> expr.getElementType.toString,
+          "isFinal" -> expr.isFinal.toString,
+          "access" -> expr.getAccessSpecifier.toString.toLowerCase,
           "isStatic" -> expr.isStatic.toString
         )
       case _ => Map.empty

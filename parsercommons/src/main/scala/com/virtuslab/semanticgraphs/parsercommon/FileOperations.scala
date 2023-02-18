@@ -12,10 +12,9 @@ object FileOperations {
     * @param file
     *   file which is root of search
     */
-  def getFileTree(file: File): List[File] = {
+  def getFileTree(file: File): List[File] =
     file :: (if (file.isDirectory) Option(file.listFiles).map(_.toList.flatMap(getFileTree)).getOrElse(List.empty)
              else List.empty)
-  }
 
   /**
     * Read file content

@@ -1,6 +1,6 @@
 package com.virtuslab.semanticgraphs.javaparser.extractor.method
 
-import com.virtuslab.semanticgraphs.javaparser.extractor.{ EdgeKind, NodeKind }
+import com.virtuslab.semanticgraphs.javaparser.extractor.{EdgeKind, NodeKind}
 import com.virtuslab.semanticgraphs.javaparser.extractor.generics.GenericsExtractor
 import com.virtuslab.semanticgraphs.javaparser.extractor.utils.*
 import com.virtuslab.semanticgraphs.javaparser.extractor.value.VariableExtractor
@@ -21,8 +21,7 @@ import scala.util.Try
 
 object MethodLikeExtractor extends GraphBuddyLogging {
 
-  def createNodes(methodLikes: Iterable[MethodLikeDeclaration], uri: String): Seq[GraphNode] = methodLikes
-    .toSeq
+  def createNodes(methodLikes: Iterable[MethodLikeDeclaration], uri: String): Seq[GraphNode] = methodLikes.toSeq
     .flatMap(methodLike => {
       Seq(methodLikeNode(methodLike, uri)) ++
         VariableExtractor.createNodes(methodLike.declaredVariables, uri) ++
@@ -50,13 +49,14 @@ object MethodLikeExtractor extends GraphBuddyLogging {
 
   private def createProperties(declaration: MethodLikeDeclaration): Map[String, String] = {
     val properties: Map[String, String] = declaration match {
-      case method: MethodDeclaration => Map(
-          "isStatic"   -> method.isStatic.toString,
-          "isFinal"    -> method.isFinal.toString,
-          "access"     -> method.getAccessSpecifier.toString.toLowerCase,
+      case method: MethodDeclaration =>
+        Map(
+          "isStatic" -> method.isStatic.toString,
+          "isFinal" -> method.isFinal.toString,
+          "access" -> method.getAccessSpecifier.toString.toLowerCase,
           "isAbstract" -> method.isAbstract.toString,
-          "type"       -> method.getType.toString,
-          "LOC"        -> method.getLOC
+          "type" -> method.getType.toString,
+          "LOC" -> method.getLOC
         )
       case _: ConstructorDeclaration => Map.empty
     }

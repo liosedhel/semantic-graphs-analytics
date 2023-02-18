@@ -19,7 +19,7 @@ object ChangesInDirectory {
     val oldState = getOldState(projectPath.toPath)
     val newState = FileVersionFromFile.getForFilesInDirectory(projectPath.toPath.toFile, fileSuffix).toSet[FileVersion]
     val newOrModifiedFiles = newState.diff(oldState).toSeq
-    val deletedFiles       = oldState.diff(newState).toSeq
+    val deletedFiles = oldState.diff(newState).toSeq
     ChangesInDirectory(
       newOrModifiedFiles.map(_.path.toPath),
       deletedFiles.map(_.path.toPath)

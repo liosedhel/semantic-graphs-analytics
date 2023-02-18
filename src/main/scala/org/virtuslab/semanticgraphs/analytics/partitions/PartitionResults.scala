@@ -85,7 +85,6 @@ case class DistributionResults(
 
 end DistributionResults
 
-
 case class PartitionResults(
   method: String,
   nodes: List[GraphNodeDTO],

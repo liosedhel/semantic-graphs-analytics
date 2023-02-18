@@ -22,7 +22,7 @@ class TypeArgumentsResolutionCache {
 
   def updateCache(cu: CompilationUnit): Unit = cu.allNodesOf[ClassOrInterfaceType].foreach { coit =>
     val typeArgumentsCount = coit.typeArguments.length
-    val typeName           = coit.getNameAsString
+    val typeName = coit.getNameAsString
     if typeArgumentsCountForName(typeName) < typeArgumentsCount then cache.put(typeName, typeArgumentsCount)
   }
 

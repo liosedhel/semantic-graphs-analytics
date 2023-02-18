@@ -2,7 +2,11 @@ package org.virtuslab.semanticgraphs.analytics.metrics
 
 import com.virtuslab.semanticgraphs.proto.model.graphnode.GraphNode
 import org.jgrapht.alg.clustering.{GirvanNewmanClustering, KSpanningTreeClustering, LabelPropagationClustering}
-import org.jgrapht.alg.connectivity.{BiconnectivityInspector, ConnectivityInspector, KosarajuStrongConnectivityInspector}
+import org.jgrapht.alg.connectivity.{
+  BiconnectivityInspector,
+  ConnectivityInspector,
+  KosarajuStrongConnectivityInspector
+}
 import org.jgrapht.alg.scoring.{BetweennessCentrality, ClusteringCoefficient}
 import org.jgrapht.alg.shortestpath.{BFSShortestPath, GraphMeasurer}
 import org.jgrapht.graph.{AsUndirectedGraph, DefaultEdge}

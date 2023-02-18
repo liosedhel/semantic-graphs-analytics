@@ -130,7 +130,6 @@ object SCGBasedProjectSummary extends App:
 
 end SCGBasedProjectSummary
 
-
 object ComputeProjectSummary extends App:
 
   import scala.concurrent.ExecutionContext.Implicits.global

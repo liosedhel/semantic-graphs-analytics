@@ -7,7 +7,7 @@ import play.api.libs.functional.syntax.*
 import play.api.libs.json.*
 
 import java.io.File
-import java.nio.file.{ Files, Path }
+import java.nio.file.{Files, Path}
 
 case class FileVersionStamp(path: String, lastModified: Long, size: Long, contentHashCode: Int) extends FileVersion {
   def toJson: String = Json.stringify(Json.toJson(this))
@@ -25,7 +25,7 @@ object FileVersionStamp {
     val file = getProjectStateFile(projectPath)
     val jsonToWrite = {
       if (file.exists()) {
-        val oldState    = readState(projectPath)
+        val oldState = readState(projectPath)
         val mergedState = mergeOldAndNewState(oldState, versions)
         FileVersionStamp.writeSeq(mergedState)
       } else {
@@ -43,10 +43,10 @@ object FileVersionStamp {
     oldState: Seq[FileVersionStamp],
     newState: Seq[FileVersionStamp]
   ): Seq[FileVersionStamp] = {
-    val oldStateMap                   = oldState.map(fileState => fileState.path -> fileState).toMap
-    val newStateSet                   = newState.map(fileState => fileState.path -> fileState).toMap
+    val oldStateMap = oldState.map(fileState => fileState.path -> fileState).toMap
+    val newStateSet = newState.map(fileState => fileState.path -> fileState).toMap
     val oldPathsSetNotPresentInNewSet = oldStateMap.keySet.diff(newStateSet.keySet)
-    val oldPathsNotPresentInNewSet    = oldPathsSetNotPresentInNewSet.flatMap(oldStateMap.get)
+    val oldPathsNotPresentInNewSet = oldPathsSetNotPresentInNewSet.flatMap(oldStateMap.get)
     newState ++ oldPathsNotPresentInNewSet.toSeq
   }
 

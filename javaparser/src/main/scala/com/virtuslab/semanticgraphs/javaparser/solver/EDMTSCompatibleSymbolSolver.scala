@@ -8,8 +8,8 @@ import com.github.javaparser.resolution.SymbolResolver
 import com.github.javaparser.symbolsolver.JavaSymbolSolver
 
 import java.util
-import java.util.{ Optional, UUID }
-import scala.collection.{ concurrent, mutable }
+import java.util.{Optional, UUID}
+import scala.collection.{concurrent, mutable}
 import scala.collection.concurrent.TrieMap
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*

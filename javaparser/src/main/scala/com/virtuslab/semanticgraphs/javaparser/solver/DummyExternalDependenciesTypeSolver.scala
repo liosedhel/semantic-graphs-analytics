@@ -1,23 +1,27 @@
 package com.virtuslab.semanticgraphs.javaparser.solver
 
 import com.virtuslab.semanticgraphs.javaparser.extractor.utils.*
-import com.virtuslab.semanticgraphs.javaparser.solver.declaration.{ DummyResolvedReferenceTypeDeclaration, DummyResolvedTypeParametrizable, DummyTypeDeclaration }
+import com.virtuslab.semanticgraphs.javaparser.solver.declaration.{
+  DummyResolvedReferenceTypeDeclaration,
+  DummyResolvedTypeParametrizable,
+  DummyTypeDeclaration
+}
 import com.virtuslab.semanticgraphs.javaparser.solver.DummyExternalDependenciesTypeSolver
 
 import com.github.javaparser.ast.`type`.Type
-import com.github.javaparser.ast.{ CompilationUnit, Node, PackageDeclaration }
+import com.github.javaparser.ast.{CompilationUnit, Node, PackageDeclaration}
 import com.github.javaparser.ast.expr.Expression
-import com.github.javaparser.resolution.{ MethodUsage, SymbolResolver }
+import com.github.javaparser.resolution.{MethodUsage, SymbolResolver}
 import com.github.javaparser.resolution.declarations.*
-import com.github.javaparser.resolution.types.{ ResolvedReferenceType, ResolvedType }
-import com.github.javaparser.symbolsolver.logic.{ AbstractTypeDeclaration, MethodResolutionCapability }
+import com.github.javaparser.resolution.types.{ResolvedReferenceType, ResolvedType}
+import com.github.javaparser.symbolsolver.logic.{AbstractTypeDeclaration, MethodResolutionCapability}
 import com.github.javaparser.symbolsolver.model.resolution.SymbolReference
 import com.github.javaparser.symbolsolver.resolution.typesolvers.MemoryTypeSolver
 import com.github.javaparser.symbolsolver.JavaSymbolSolver
 
 import java.util
-import java.util.{ Optional, UUID }
-import scala.collection.{ concurrent, mutable }
+import java.util.{Optional, UUID}
+import scala.collection.{concurrent, mutable}
 import scala.collection.concurrent.TrieMap
 import scala.jdk.CollectionConverters.*
 import scala.jdk.OptionConverters.*
@@ -29,7 +33,7 @@ import scala.jdk.OptionConverters.*
   * should fail with incorrect package of String)
   */
 class DummyExternalDependenciesTypeSolver extends MemoryTypeSolver {
-  private val localPackages                = new TrieMap[String, String]()
+  private val localPackages = new TrieMap[String, String]()
   private val typeArgumentsResolutionCache = TypeArgumentsResolutionCache()
 
   def updateCurrentNodeInformation(node: Node): Unit = node.findRootNode() match {

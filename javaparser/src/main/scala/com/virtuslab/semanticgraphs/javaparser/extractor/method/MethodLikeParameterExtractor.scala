@@ -1,6 +1,6 @@
 package com.virtuslab.semanticgraphs.javaparser.extractor.method
 
-import com.virtuslab.semanticgraphs.javaparser.extractor.{ EdgeKind, NodeKind }
+import com.virtuslab.semanticgraphs.javaparser.extractor.{EdgeKind, NodeKind}
 import com.virtuslab.semanticgraphs.javaparser.extractor.utils.*
 import com.virtuslab.semanticgraphs.parsercommon.logger.GraphBuddyLogging
 import com.virtuslab.semanticgraphs.proto.model.graphnode.GraphNode
@@ -17,8 +17,7 @@ import scala.util.Try
 
 object MethodLikeParameterExtractor extends GraphBuddyLogging {
 
-  def createNodes(methodLike: MethodLikeDeclaration, uri: String): Seq[GraphNode] = methodLike
-    .allParameters
+  def createNodes(methodLike: MethodLikeDeclaration, uri: String): Seq[GraphNode] = methodLike.allParameters
     .map(parameter => {
       GraphNode(
         id = parameter.getQualifiedSignature.getOrElse(parameter.getNameAsString),
@@ -34,8 +33,8 @@ object MethodLikeParameterExtractor extends GraphBuddyLogging {
 
   private def createProperties(parameter: Parameter): Map[String, String] = {
     Map(
-      "type"              -> parameter.getType.toString,
-      "isFinal"           -> parameter.isFinal.toString,
+      "type" -> parameter.getType.toString,
+      "isFinal" -> parameter.isFinal.toString,
       "declarationString" -> parameter.getDeclarationAsHTML
     )
   }

@@ -5,7 +5,7 @@ import com.virtuslab.semanticgraphs.parsercommon.toPath
 
 import org.eclipse.jgit.fnmatch.FileNameMatcher
 
-import java.nio.file.{ FileSystems, Path, PathMatcher }
+import java.nio.file.{FileSystems, Path, PathMatcher}
 import scala.io.Source
 import scala.util.matching.Regex
 import scala.util.Try
@@ -26,7 +26,7 @@ object GraphBuddyIgnore {
   def get(projectPath: Path): GraphBuddyIgnore = {
     val lines: Seq[String] = Try {
       val source = Source.fromFile(projectPath.resolve(".graphbuddy.ignore").toFile)
-      val lines  = source.getLines().toSeq
+      val lines = source.getLines().toSeq
       source.close()
       lines
     }.toOption.getOrElse(Seq())

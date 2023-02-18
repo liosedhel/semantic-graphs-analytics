@@ -10,7 +10,13 @@ import org.virtuslab.semanticgraphs.analytics.summary.SCGProjectSummary
 import io.circe.generic.auto.*
 import io.circe.syntax.*
 import org.virtuslab.semanticgraphs.analytics.crucial.CrucialNodes
-import org.virtuslab.semanticgraphs.analytics.partitions.{EdgeDTO, GraphNodeDTO, LocationDTO, PartitionResults}
+import org.virtuslab.semanticgraphs.analytics.partitions.{
+  EdgeDTO,
+  GraphNodeDTO,
+  LocationDTO,
+  PartitionResults,
+  PartitionResultsSummary
+}
 import picocli.CommandLine
 import picocli.CommandLine.{Command, HelpCommand, Option, Parameters}
 import picocli.CommandLine.Model.CommandSpec
@@ -31,12 +37,12 @@ class ScgCli:
 
   @Command(name = "generate", description = Array("Generate SCG metadata"))
   def generate(
-     @Parameters(
-       paramLabel = "<workspace>",
-       description = Array("Workspace where SCG proto files are located in .semanticgraphs directory or zipped archive")
-     )
-     workspace: String
-   ): Unit =
+    @Parameters(
+      paramLabel = "<workspace>",
+      description = Array("Workspace where SCG proto files are located in .semanticgraphs directory or zipped archive")
+    )
+    workspace: String
+  ): Unit =
     println(s"Generating SCG metadata for $workspace")
     JavaParserMain.generateSemanticGraphFiles(workspace)
     println(s"SCG was generated to $workspace/.semanticgraphs")
@@ -60,9 +66,19 @@ class ScgCli:
       description = Array("Workspace where SCG proto files are located in .semanticgraphs directory or zipped archive")
     )
     workspace: String,
-    @Option(names = Array("-o", "--output"), description = Array("Output format: html, json, txt"), arity = "0..1", defaultValue = "html")
+    @Option(
+      names = Array("-o", "--output"),
+      description = Array("Output format: html, json, txt"),
+      arity = "0..1",
+      defaultValue = "html"
+    )
     output: String,
-    @Option(names = Array("-m", "--mode"), description = Array("Analysis mode: quick, full"), arity = "0..1", defaultValue = "quick")
+    @Option(
+      names = Array("-m", "--mode"),
+      description = Array("Analysis mode: quick, full"),
+      arity = "0..1",
+      defaultValue = "quick"
+    )
     mode: String
   ): Unit =
     val scg = SemanticCodeGraph.read(ProjectAndVersion(workspace, workspace.split("/").last, ""))
@@ -95,9 +111,19 @@ class ScgCli:
     workspace: String,
     @Parameters(paramLabel = "<nparts>", description = Array("Up to how many partitions split the project"))
     nparts: Int,
-    @Option(names = Array("-o", "--output"), description = Array("Output format: html, json, txt, default: ${DEFAULT-VALUE}"), arity = "0..1", defaultValue = "html")
+    @Option(
+      names = Array("-o", "--output"),
+      description = Array("Output format: html, json, txt, default: ${DEFAULT-VALUE}"),
+      arity = "0..1",
+      defaultValue = "html"
+    )
     output: String,
-    @Option(names = Array("--use-docker"), description = Array("Use partition gpmetis/patoh programs through docker image, default: ${DEFAULT-VALUE}"), arity = "0..1", defaultValue = "false")
+    @Option(
+      names = Array("--use-docker"),
+      description = Array("Use partition gpmetis/patoh programs through docker image, default: ${DEFAULT-VALUE}"),
+      arity = "0..1",
+      defaultValue = "false"
+    )
     useDocker: Boolean
   ): Unit =
     println(useDocker)
@@ -109,6 +135,7 @@ class ScgCli:
     )
     output match {
       case "html" =>
+        PartitionResultsSummary.exportHtmlSummary(PartitionResultsSummary(results))
       case "json" =>
         val outputFile = s"${projectAndVersion.projectName}.partition.json"
         JsonUtils.dumpJsonFile(outputFile, write(PartitionResult(results)))
@@ -123,10 +150,8 @@ class ScgCli:
         )
     }
 
-
-
 object ScgCli:
   def main(args: Array[String]): Unit =
-    //Files.createDirectories(Path.of(".scg"))
+    // Files.createDirectories(Path.of(".scg"))
     val exitCode = new CommandLine(new ScgCli).execute(args: _*)
     System.exit(exitCode)

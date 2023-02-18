@@ -8,7 +8,7 @@ import com.virtuslab.semanticgraphs.javaparser.extractor.value.VariableExtractor
 import com.virtuslab.semanticgraphs.parsercommon.logger.GraphBuddyLogging
 import com.virtuslab.semanticgraphs.proto.model.graphnode.GraphNode
 
-import com.github.javaparser.ast.body.{ ConstructorDeclaration, InitializerDeclaration, MethodDeclaration }
+import com.github.javaparser.ast.body.{ConstructorDeclaration, InitializerDeclaration, MethodDeclaration}
 
 object InitializerExtractor extends GraphBuddyLogging {
 
