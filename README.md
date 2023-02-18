@@ -1,52 +1,42 @@
 # Semantic Code Graph analytics
 
-## Metadata
+## Using scg-cli
 
-All the metadata analysed is in `./data` folder
-
-## Export to GDF
-
+Build the `scg-cli` with:
 ```bash
-sbt "runMain org.virtuslab.semanticgraphs.analytics.exporters.ExportToGdf"
+$ sbt stage
 ```
 
-## Find crucial elements in the source code
+and follow the `scg-cli` help page:
 
-It will analyse the .semanticgraphs files, print and export appropriate .json files:
 ```bash
-sbt "runMain org.virtuslab.semanticgraphs.analytics.crucial.CrucialNodesApp data/akka"
+$ ./target/universal/stage/bin/scg-cli help  
+Usage: scg-cli [COMMAND]
+CLI to analyse projects based on SCG data
+Commands:
+  help       Display help information about the specified command.
+  crucial    Find crucial code entities
+  generate   Generate SCG metadata
+  partition  Suggest project partitioning.
+  summary    Summarize the project
 ```
 
-or run for all the projects
+### Example 
+
+In `data` folder you can find extracted and zipped `*.semanticgraphs` files. You can try to analyse them with:
+
 ```bash
-sbt "runMain org.virtuslab.semanticgraphs.analytics.crucial.CrucialNodesAnalyzeAll"
+$ ./target/universal/stage/bin/scg-cli summary data/metals.zip 
 ```
 
-## Partition the graph
+## Using on your java project
 
-`gpmetis` program has to exist
-
+First the metadata for the project has to be generated
 ```bash
-sbt "runMain org.virtuslab.semanticgraphs.analytics.partitions.gpmetis.GpmetisPartitionsApp data/akka 4"
+$ ./target/universal/stage/bin/scg-cli generate path/to/project
 ```
 
-## Partitioning the hypergraph
-
-`patoh` program has to exist
-
+It will take a moment to generate the metadata. Then you can start to analyse your project:
 ```bash
-sbt "runMain org.virtuslab.semanticgraphs.analytics.partitions.patoh.PatohClustering data/akka 4"
-```
-
-## Partitioning comparison
-
-```bash
-sbt "runMain org.virtuslab.semanticgraphs.analytics.partitions.comparison.PartitioningComparisonApp data/akka 4"
-```
-
-
-## LOC of original project
-
-```bash
-$ find /Users/kborowski/phd/commons-io -type f -not -path '*/.*/*' | egrep --color=never '.*\.(scala|java)$' | egrep --color=never -v '.*/target/.*' | xargs wc -l | tail -n1 | awk '{print $1}'
+$ ./target/universal/stage/bin/scg-cli summary path/to/project
 ```
