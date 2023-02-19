@@ -7,14 +7,29 @@ import io.circe.syntax.*
 
 import java.nio.file.{Files, Path, StandardCopyOption}
 
-case class PartitionResultsWrapper(results: List[PartitionResultsSummary])
+//|Method |NPart|Modularity|Coefficient|Weighted|Accuracy|Weighted|Accuracy|Variance|Distribution
+case class AverageAccuracy(weighted: Int, standard: Int)
+case class ShortSummary(
+  method: String,
+  npart: Int,
+  modularity: Double,
+  coefficient: Double,
+  file: AverageAccuracy,
+  `package`: AverageAccuracy,
+  variance: Double,
+  distribution: String
+)
+
+case class PartitionPackageSummary(method: String, part: Int, accuracy: Int, `package`: String, distribution: String)
+case class PartitionFileSummary(method: String, part: Int, accuracy: Int, file: String, distribution: String)
+
 case class PartitionResultsSummary(
   nparts: Int,
   byPackage: List[PartitionPackageSummary],
   byFile: List[PartitionFileSummary]
 )
-case class PartitionPackageSummary(method: String, part: Int, accuracy: Int, `package`: String, distribution: String)
-case class PartitionFileSummary(method: String, part: Int, accuracy: Int, file: String, distribution: String)
+
+case class PartitionResultsWrapper(results: List[PartitionResultsSummary], summary: List[ShortSummary])
 
 object PartitionResultsSummary:
 
@@ -39,6 +54,24 @@ object PartitionResultsSummary:
           partitionResults.distribution.mkString("[", ",", "]")
         )
       PartitionResultsSummary(result.nparts, byPackage, byFile)
+    },
+    summary = partitionResults.map { result =>
+      ShortSummary(
+        result.method,
+        result.nparts,
+        result.modularityRatio,
+        result.clusteringCoefficient,
+        AverageAccuracy(
+          result.fileDistribution.weightedAverageAccuracy,
+          result.fileDistribution.arithmeticAverageAccuracy
+        ),
+        AverageAccuracy(
+          result.packageDistribution.weightedAverageAccuracy,
+          result.packageDistribution.arithmeticAverageAccuracy
+        ),
+        result.distributionVariance,
+        result.globalNodesDistribution.map(i => i * 100 / result.nodes.size).mkString("[", ",", "]%")
+      )
     }
   )
 
