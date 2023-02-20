@@ -8,5 +8,4 @@ target
 *.json
 .scala-build
 .java-version
-*.txt
 .DS_Store
