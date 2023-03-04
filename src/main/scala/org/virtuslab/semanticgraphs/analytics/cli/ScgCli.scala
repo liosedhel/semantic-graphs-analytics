@@ -126,7 +126,6 @@ class ScgCli:
     )
     useDocker: Boolean
   ): Unit =
-    println(useDocker)
     val projectAndVersion = ProjectAndVersion(workspace, workspace.split("/").last, "")
     val results = PartitioningComparisonApp.runPartitionComparison(
       projectAndVersion,
@@ -148,6 +147,8 @@ class ScgCli:
           ),
           results
         )
+      case "tex" =>
+        println(PartitionResultsSummary.exportTex(PartitionResultsSummary(results)))
     }
 
 object ScgCli:

@@ -193,6 +193,8 @@ object PartitionResults:
           f"${file.weightedAverageAccuracy}%7d%%|${file.arithmeticAverageAccuracy}%7d%%|${_package.weightedAverageAccuracy}%7d%%|${_package.arithmeticAverageAccuracy}%7d%%|" +
           f"${result.distributionVariance}%8.3f|[${result.globalNodesDistribution.map(i => i * 100 / nodesSize).mkString(",")}]%%"
       )
+  
+  
 
 case class GroupPartitionStats(partitionName: String, distribution: List[Int]) extends Comparable[GroupPartitionStats]:
 

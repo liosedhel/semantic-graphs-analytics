@@ -93,3 +93,29 @@ object PartitionResultsSummary:
     Files.copy(inputStream, summaryResultDirectory.resolve("partition.html"), StandardCopyOption.REPLACE_EXISTING)
     inputStream.close()
   }
+
+  def exportTex(summary: PartitionResultsWrapper): String = {
+
+    extension (number: Double) def to3: String = String.format("%.3f", number)
+
+    val builder = new StringBuilder()
+    builder.append(
+      "\\begin{tabular}{|r|r|r|r|r|r|r|r|r|l|}  \n"
+    )
+    builder.append("\\hline \n")
+    builder.append(
+      "Method &  NPart & Modularity & ACC & File W. & File A. & Package W. & Package A. & Variance & Distribution \\\\ \n"
+    )
+    builder.append("\\hline \n")
+    summary.summary.foreach { shortSummary =>
+      import shortSummary._
+      builder.append(
+        s"$method & $npart & ${modularity.to3} & ${coefficient.to3} & ${file.weighted}\\% & ${file.standard}\\% & ${`package`.weighted}\\% & ${`package`.standard}\\% & ${variance.to3} & ${distribution
+            .replace("%", "\\%")} \\\\ \n"
+      )
+    }
+    builder.append("\\hline \n")
+    builder.append("\\end{tabular} \n")
+
+    builder.toString()
+  }
