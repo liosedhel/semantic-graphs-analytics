@@ -10,13 +10,8 @@ import org.virtuslab.semanticgraphs.analytics.summary.SCGProjectSummary
 import io.circe.generic.auto.*
 import io.circe.syntax.*
 import org.virtuslab.semanticgraphs.analytics.crucial.CrucialNodes
-import org.virtuslab.semanticgraphs.analytics.partitions.{
-  EdgeDTO,
-  GraphNodeDTO,
-  LocationDTO,
-  PartitionResults,
-  PartitionResultsSummary
-}
+import org.virtuslab.semanticgraphs.analytics.exporters.JupyterNotebook
+import org.virtuslab.semanticgraphs.analytics.partitions.{EdgeDTO, GraphNodeDTO, LocationDTO, PartitionResults, PartitionResultsSummary}
 import picocli.CommandLine
 import picocli.CommandLine.{Command, HelpCommand, Option, Parameters}
 import picocli.CommandLine.Model.CommandSpec
@@ -150,6 +145,28 @@ class ScgCli:
       case "tex" =>
         println(PartitionResultsSummary.exportTex(PartitionResultsSummary(results)))
     }
+
+  @Command(name = "export", description = Array("Export SCG metadata for further analysis"))
+  def `export`(
+    @Parameters(
+      paramLabel = "<workspace>",
+      description = Array("Workspace where SCG proto files are located in .semanticgraphs directory or zipped archive")
+    )
+    workspace: String,
+    @Option(
+      names = Array("-o", "--output"),
+      description = Array("Output format: html, json, txt, default: ${DEFAULT-VALUE}"),
+      arity = "0..1",
+      defaultValue = "jupyter"
+    )
+    output: String
+  ): Unit =
+    val projectAndVersion = ProjectAndVersion(workspace, workspace.split("/").last, "")
+    output match {
+      case "jupyter" =>
+        JupyterNotebook.runJupyterNotebook(projectAndVersion.workspace)
+    }
+
 
 object ScgCli:
   def main(args: Array[String]): Unit =

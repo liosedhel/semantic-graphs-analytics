@@ -73,7 +73,7 @@ object PatohPartitions:
             "--rm",
             "-v",
             os.pwd.toString + "/:/data",
-            DockerDistribution.dockerImage,
+            DockerDistribution.scgCliImage,
             "patoh",
             s"$projectName.patoh",
             nparts,

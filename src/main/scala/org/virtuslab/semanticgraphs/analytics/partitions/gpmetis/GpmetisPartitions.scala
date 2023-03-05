@@ -81,7 +81,7 @@ object GpmetisPartitions:
             "--rm",
             "-v",
             os.pwd.toString + "/:/data",
-            DockerDistribution.dockerImage,
+            DockerDistribution.scgCliImage,
             "gpmetis",
             "-ptype=kway",
             "-contig",
