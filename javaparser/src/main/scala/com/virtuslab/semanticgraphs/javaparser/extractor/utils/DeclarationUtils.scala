@@ -141,11 +141,6 @@ extension (coid: ClassOrInterfaceDeclaration)(using
 
   def extendedTypes: Seq[ClassOrInterfaceType] = coid.getExtendedTypes.asScala.toSeq
 
-  def getPackage: Option[String] = coid.getFullyQualifiedName.asScala.map { fullClassPath =>
-    val name = coid.getName.toString
-    fullClassPath.stripSuffix(s".$name")
-  }
-
   def extendTypeArgumentEdges(uri: String): Seq[Edge] = {
     for {
       extendedType <- coid.inheritedTypes

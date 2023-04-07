@@ -1,20 +1,21 @@
 val scala3Version = "3.2.1"
 
+maintainer := "kborowski@virtuslab.com"
+
 lazy val root = project
   .in(file("."))
   .enablePlugins(JavaAppPackaging)
   .settings(
-    name := "semantic-graphs-analytics",
+    name := "scg-cli",
     organization := "com.virtuslab.semanticgraphs",
     version := "0.1.0-SNAPSHOT",
     scalaVersion := scala3Version,
     Compile / PB.targets := Seq(
       scalapb.gen() -> (Compile / sourceManaged).value
     ),
-    //Compile / mainClass := Some("org.virtuslab.semanticgraphs.analytics.cli.ScgCli"),
-    //Universal / name := "scg-cli",
-    //Universal / packageName := "scg-cli",
-    //Compile / discoveredMainClasses := Seq(),
+    dockerBaseImage := "openjdk:11",
+    packageName := "scg-cli",
+    Compile / discoveredMainClasses := Seq("org.virtuslab.semanticgraphs.analytics.cli.ScgCli"),
     scalacOptions ++= Seq("-new-syntax", "-rewrite"),
     libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test",
     libraryDependencies += "org.jgrapht" % "jgrapht-core" % "1.5.1",

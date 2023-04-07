@@ -28,7 +28,7 @@ object EnumConstantExtractor extends GraphBuddyLogging {
             kind = NodeKind.VALUE,
             location = ec.simpleNameLocation(uri),
             displayName = ec.getNameAsString,
-            properties = createProperties(ec),
+            properties = createProperties(ec) ++ PackageExtractor.getPackage(ecSignature),
             edges = ec.callEdges(uri)
           )
         }

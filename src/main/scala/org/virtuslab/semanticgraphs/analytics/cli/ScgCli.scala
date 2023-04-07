@@ -10,7 +10,7 @@ import org.virtuslab.semanticgraphs.analytics.summary.SCGProjectSummary
 import io.circe.generic.auto.*
 import io.circe.syntax.*
 import org.virtuslab.semanticgraphs.analytics.crucial.CrucialNodes
-import org.virtuslab.semanticgraphs.analytics.exporters.JupyterNotebook
+import org.virtuslab.semanticgraphs.analytics.exporters.{ExportToGdf, JupyterNotebook}
 import org.virtuslab.semanticgraphs.analytics.partitions.{EdgeDTO, GraphNodeDTO, LocationDTO, PartitionResults, PartitionResultsSummary}
 import picocli.CommandLine
 import picocli.CommandLine.{Command, HelpCommand, Option, Parameters}
@@ -155,16 +155,20 @@ class ScgCli:
     workspace: String,
     @Option(
       names = Array("-o", "--output"),
-      description = Array("Output format: html, json, txt, default: ${DEFAULT-VALUE}"),
+      description = Array("Output format: jupyter, gdf, default: ${DEFAULT-VALUE}"),
       arity = "0..1",
       defaultValue = "jupyter"
     )
     output: String
   ): Unit =
-    val projectAndVersion = ProjectAndVersion(workspace, workspace.split("/").last, "")
+    val projectName = workspace.split("/").last
+    val projectAndVersion = ProjectAndVersion(workspace, projectName, "")
     output match {
       case "jupyter" =>
         JupyterNotebook.runJupyterNotebook(projectAndVersion.workspace)
+      case "gdf" =>
+        ExportToGdf.exportToGdf(s"$projectName.gdf", SemanticCodeGraph.read(projectAndVersion))
+        println(s"Exported to `$projectName.gdf` file.")
     }
 
 

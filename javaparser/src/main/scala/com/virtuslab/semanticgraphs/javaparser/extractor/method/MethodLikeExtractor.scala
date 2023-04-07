@@ -21,16 +21,17 @@ import scala.util.Try
 
 object MethodLikeExtractor extends GraphBuddyLogging {
 
-  def createNodes(methodLikes: Iterable[MethodLikeDeclaration], uri: String): Seq[GraphNode] = methodLikes.toSeq
-    .flatMap(methodLike => {
-      Seq(methodLikeNode(methodLike, uri)) ++
-        VariableExtractor.createNodes(methodLike.declaredVariables, uri) ++
-        MethodLikeParameterExtractor.createNodes(methodLike, uri) ++
-        (methodLike match {
-          case md: MethodDeclaration => GenericsExtractor.createNodes(md, uri)
-          case _                     => Seq.empty
-        })
-    })
+  def createNodes(methodLikes: Iterable[MethodLikeDeclaration], uri: String): Seq[GraphNode] =
+    methodLikes.toSeq
+      .flatMap(methodLike => {
+        Seq(methodLikeNode(methodLike, uri)) ++
+          VariableExtractor.createNodes(methodLike.declaredVariables, uri, isLocal = true) ++
+          MethodLikeParameterExtractor.createNodes(methodLike, uri) ++
+          (methodLike match {
+            case md: MethodDeclaration => GenericsExtractor.createNodes(md, uri)
+            case _                     => Seq.empty
+          })
+      })
 
   private def methodLikeNode(methodLike: MethodLikeDeclaration, uri: String): GraphNode = GraphNode(
     id = methodLike.getQualifiedSignature,
@@ -57,11 +58,12 @@ object MethodLikeExtractor extends GraphBuddyLogging {
           "isAbstract" -> method.isAbstract.toString,
           "type" -> method.getType.toString,
           "LOC" -> method.getLOC
-        )
-      case _: ConstructorDeclaration => Map.empty
+        ) ++ PackageExtractor.getPackage(method.getQualifiedSignature)
+      case const: ConstructorDeclaration =>
+        PackageExtractor.getPackage(const.getQualifiedSignature)
     }
 
-    properties + ("declarationString" -> declaration.getDeclarationAsHTML)
+    properties
   }
 
 }

@@ -17,26 +17,26 @@ import scala.util.Try
 
 object MethodLikeParameterExtractor extends GraphBuddyLogging {
 
-  def createNodes(methodLike: MethodLikeDeclaration, uri: String): Seq[GraphNode] = methodLike.allParameters
-    .map(parameter => {
-      GraphNode(
-        id = parameter.getQualifiedSignature.getOrElse(parameter.getNameAsString),
-        kind = parameter.kind,
-        location = parameter.simpleNameLocation(uri),
-        properties = createProperties(parameter),
-        displayName = parameter.getNameAsString,
-        edges = parameter.typeEdge(uri).toSeq ++
-          parameter.typeArgumentEdges(uri) ++
-          parameter.callEdges(uri)
-      )
-    })
+  def createNodes(methodLike: MethodLikeDeclaration, uri: String): Seq[GraphNode] =
+    methodLike.allParameters
+      .map(parameter => {
+        GraphNode(
+          id = parameter.getQualifiedSignature.getOrElse(parameter.getNameAsString),
+          kind = parameter.kind,
+          location = parameter.simpleNameLocation(uri),
+          properties = createProperties(parameter),
+          displayName = parameter.getNameAsString,
+          edges = parameter.typeEdge(uri).toSeq ++
+            parameter.typeArgumentEdges(uri) ++
+            parameter.callEdges(uri)
+        )
+      })
 
   private def createProperties(parameter: Parameter): Map[String, String] = {
     Map(
       "type" -> parameter.getType.toString,
-      "isFinal" -> parameter.isFinal.toString,
-      "declarationString" -> parameter.getDeclarationAsHTML
-    )
+      "isFinal" -> parameter.isFinal.toString
+    ) ++ PackageExtractor.getPackage(parameter.getQualifiedSignature.getOrElse(parameter.getNameAsString)) + ("isLocal" -> true.toString())
   }
 
 }

@@ -14,7 +14,7 @@ object InitializerExtractor extends GraphBuddyLogging {
 
   def createStaticNodes(declarations: Iterable[InitializerDeclaration], uri: String): Seq[GraphNode] = {
     declarations.filter(_.isStatic).toSeq.flatMap { initializer =>
-      VariableExtractor.createNodes(initializer.variableDeclarations, uri)
+      VariableExtractor.createNodes(initializer.variableDeclarations, uri, isLocal = false)
     }
   }
 

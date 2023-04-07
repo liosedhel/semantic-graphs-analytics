@@ -20,14 +20,17 @@ object VariableExtractor extends GraphBuddyLogging {
 
   def createNodes(
     variableDeclarators: Iterable[VariableDeclarator],
-    uri: String
+    uri: String,
+    isLocal: Boolean
   ): Seq[GraphNode] = {
     variableDeclarators.toSeq.flatMap { variableDeclarator =>
       for { signature <- variableDeclarator.getQualifiedSignature(uri) } yield GraphNode(
         id = signature,
         kind = variableDeclarator.kind,
         location = variableDeclarator.simpleNameLocation(uri),
-        properties = createProperties(variableDeclarator),
+        properties = createProperties(variableDeclarator) ++ PackageExtractor.getPackage(
+          signature
+        ) + ("isLocal" -> isLocal.toString()),
         displayName = variableDeclarator.getNameAsString,
         edges = variableDeclarator.typeEdge(uri).toSeq ++
           variableDeclarator.typeArgumentEdges(uri) ++
@@ -51,7 +54,7 @@ object VariableExtractor extends GraphBuddyLogging {
           "isStatic" -> expr.isStatic.toString
         )
       case _ => Map.empty
-    } + ("declarationString" -> declaration.getDeclarationAsHTML)
+    }
   }
 
 }

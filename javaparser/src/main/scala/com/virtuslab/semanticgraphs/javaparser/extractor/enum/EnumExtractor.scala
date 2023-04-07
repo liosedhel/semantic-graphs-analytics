@@ -7,7 +7,6 @@ import com.virtuslab.semanticgraphs.javaparser.extractor.utils.*
 import com.virtuslab.semanticgraphs.javaparser.extractor.value.VariableExtractor
 import com.virtuslab.semanticgraphs.parsercommon.logger.GraphBuddyLogging
 import com.virtuslab.semanticgraphs.proto.model.graphnode.{Edge, GraphNode, Location}
-
 import com.github.javaparser.ast.body.{
   CallableDeclaration,
   ClassOrInterfaceDeclaration,
@@ -30,11 +29,11 @@ object EnumExtractor extends GraphBuddyLogging:
           id = signature,
           kind = e.kind,
           location = e.simpleNameLocation(uri),
-          properties = Map("declarationString" -> e.getDeclarationAsHTML),
+          properties = PackageExtractor.getPackage(e.getFullyQualifiedName),
           displayName = e.getNameAsString,
           edges = e.declarationEdges(uri) ++ e.extendEdges(uri)
         )
       }) ++ EnumConstantExtractor.createNodes(e.enumConstants, uri) ++
       MethodLikeExtractor.createNodes(e.methodLikeDeclarations, uri) ++
-      VariableExtractor.createNodes(e.variableDeclarations, uri)
+      VariableExtractor.createNodes(e.variableDeclarations, uri, isLocal = false)
   })

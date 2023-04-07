@@ -33,7 +33,7 @@ object ClassExtractor extends GraphBuddyLogging:
             id = signature,
             kind = coid.kind,
             location = coid.simpleNameLocation(uri),
-            properties = createProperties(coid),
+            properties = createProperties(coid) ++ PackageExtractor.getPackage(signature),
             displayName = coid.getNameAsString,
             edges = coid.declarationEdges(uri) ++
               coid.extendEdges(uri) ++
@@ -42,7 +42,7 @@ object ClassExtractor extends GraphBuddyLogging:
               coid.initializerCallEdges(uri)
           )
         }) ++ MethodLikeExtractor.createNodes(coid.methodLikeDeclarations, uri) ++
-        VariableExtractor.createNodes(coid.variableDeclarations, uri) ++
+        VariableExtractor.createNodes(coid.variableDeclarations, uri, isLocal = false) ++
         GenericsExtractor.createNodes(coid, uri) ++
         InitializerExtractor.createStaticNodes(coid.initializerDeclarations, uri)
     })
@@ -54,9 +54,8 @@ object ClassExtractor extends GraphBuddyLogging:
       "isAbstract" -> coid.isAbstract.toString,
       "isFinal" -> coid.isFinal.toString,
       "access" -> coid.getAccessSpecifier.toString.toLowerCase,
-      "declarationString" -> coid.getDeclarationAsHTML,
       "LOC" -> coid.getLOC
-    ) ++ coid.getPackage.map("package" -> _)
+    )
   }
 
 end ClassExtractor

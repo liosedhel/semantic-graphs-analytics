@@ -50,7 +50,7 @@ def show_graph(G):
 
 def show_graph_distribution(G):
     plt.clf()
-    degree_sequence = sorted((d for n, d in G.degree()), reverse=True)
+    degree_sequence = sorted((d for n, d in G.degree()), reverse=True)[0:100]
 
     fig = plt.figure("Degree of a SCG", figsize=(8, 8))
     # Create a gridspec for adding subplots of different sizes

@@ -156,7 +156,7 @@ object SemanticCodeGraph:
   def readLOC(
     projectAndVersion: ProjectAndVersion
   ): Long =
-    if projectAndVersion.projectName.endsWith(".zip") then readLOCFromZip(projectAndVersion)
+    if projectAndVersion.workspace.endsWith(".zip") then readLOCFromZip(projectAndVersion)
     else readLOCFromDir(projectAndVersion)
 
   private def readLOCFromDir(
@@ -181,7 +181,6 @@ object SemanticCodeGraph:
     projectAndVersion: ProjectAndVersion
   ): Long =
     var loc = 0L
-    val dir = projectAndVersion.workspace.resolve(".semanticgraphs")
 
     val zipFile = new ZipFile(s"${projectAndVersion.workspace}")
     val entries = zipFile.getEntries

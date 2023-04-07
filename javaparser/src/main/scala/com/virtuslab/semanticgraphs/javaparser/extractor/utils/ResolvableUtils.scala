@@ -27,8 +27,8 @@ import scala.util.Try
 extension [T](r: Node with Resolvable[T])(using
   logger: Logger
 ) {
-  def resolveLoggingStackTraceFrame(stackTraceFramesToSkip: Int = 3): Try[T] =
-    Try(r.resolve()).withLogging(stackTraceFramesToSkip = stackTraceFramesToSkip)
+  def resolveLoggingStackTraceFrame(skip: Int = 3): Try[T] =
+    Try(r.resolve()).withLogging(stackTraceFramesToSkip = skip)
   def resolveTry: Try[T] = r.resolveLoggingStackTraceFrame()
   def resolveOption: Option[T] = r.resolveLoggingStackTraceFrame().toOption
 }

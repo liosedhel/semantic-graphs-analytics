@@ -106,7 +106,7 @@ object SCGBasedProjectSummary extends App:
 
   def printSummaryLatexTable() =
     println()
-    println("Name & Version & LOC & Nodes & Edges & Density & AOD & AID & & GCC & AC\\\\")
+    println("Name & Version & LOC & Nodes & LOC/Nodes & Edges & Density & AOD & AID & & GCC & AC\\\\")
     println("\\hline")
     projects.map(_.withoutZeroDegreeNodes()).foreach { semanticCodeGraph =>
       val nodesTotal = semanticCodeGraph.graph.vertexSet().size()
@@ -120,7 +120,7 @@ object SCGBasedProjectSummary extends App:
       val totalLoc = SemanticCodeGraph.readLOC(semanticCodeGraph.projectAndVersion)
 
       println(
-        f"${semanticCodeGraph.projectName} & ${semanticCodeGraph.version} & $totalLoc & $nodesTotal & $edgesTotal & $density%1.5f & $averageOutDegree%1.3f & $averageInDegree%1.3f & $globalClusteringCoefficient%1.2f & $assortativityCoefficient%1.4f\\\\"
+        f"${semanticCodeGraph.projectName} & ${semanticCodeGraph.version} & $totalLoc & $nodesTotal & ${totalLoc.toDouble / nodesTotal}%1.2f  & $edgesTotal & $density%1.5f & $averageOutDegree%1.2f & $averageInDegree%1.2f & $globalClusteringCoefficient%1.2f & $assortativityCoefficient%1.2f\\\\"
       )
     }
     println()
