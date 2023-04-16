@@ -3,9 +3,11 @@ import os
 import networkx as nx
 import numpy as np
 import matplotlib.pyplot as plt
+import pandas as pd
 
 
 def read_scg_file(file_name):
+    scg_file = None
     if os.path.isfile(file_name) and file_name.endswith(".semanticgraphdb"):
         with open(file_name, "rb") as f:
             scg_file = scg_pb.SemanticGraphFile()
@@ -18,8 +20,33 @@ def read_scg(workspace):
     scg = []
     for root, dir, files in os.walk(scg_folder):
         for f in files:
-            scg.append(read_scg_file(os.path.join(root, f)))
+            scg_file = read_scg_file(os.path.join(root, f))
+            if scg_file is not None:
+                scg.append(scg_file)
     return scg
+
+
+def create_call_graph(scgs):
+    G = nx.DiGraph()
+    count = 0
+    for scg_file in scgs:
+        for node in scg_file.nodes:
+            if node.kind in {"METHOD", "CONSTRUCTOR", "VALUE", "VARIABLE"} and node.location.uri != "":
+                G.add_node(node.id, scg_node=node)
+                for edge in node.edges:
+                    if edge.type == "CALL":
+                        count += 1
+                        G.add_edge(node.id, edge.to)
+
+    for n in list(G.nodes()):
+        scg_node = G.nodes[n].get("scg_node")
+        # filter out not visible in the project nodes
+        if G.degree(n) <= 0 or scg_node is None or scg_node.location.uri == "":
+            G.remove_node(n)
+    print(len(G.nodes()))
+    print(len(G.edges()))
+    print(count)
+    return G
 
 
 def create_graph(scgs):
@@ -69,6 +96,23 @@ def show_graph_distribution(G):
     ax2.set_ylabel("# of Nodes")
 
     plt.show()
+
+
+def create_nodes_df(scg_files):
+    nodes = [n for file in scg_files for n in file.nodes]
+
+    def extractDict(n):
+        attributes = {}
+        attributes["id"] = n.id
+        attributes["displayName"] = n.displayName
+        attributes["kind"] = n.kind
+        attributes["package"] = n.properties["package"]
+        attributes["file"] = n.location.uri.split("/")[-1]
+        attributes["isLocal"] = n.properties["isLocal"] == "true"
+        return attributes
+
+    dict = [extractDict(n) for n in nodes if n]
+    return pd.DataFrame(dict)
 
 
 def main():

@@ -98,7 +98,7 @@ object SCGProjectSummary:
 
 object SCGBasedProjectSummary extends App:
 
-  val projects = SemanticCodeGraph.readAllProjects() ++ SemanticCodeGraph.readAllProjectsCallGraph()
+  val projects = SemanticCodeGraph.readAllProjects() ++ SemanticCodeGraph.readAllProjectsFullCallGraph()
 
   def exportSummary(): Unit =
     val summary = projects.map(SCGProjectSummary.summary)

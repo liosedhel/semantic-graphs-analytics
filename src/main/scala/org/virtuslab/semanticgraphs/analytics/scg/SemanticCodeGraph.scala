@@ -89,7 +89,8 @@ object SemanticCodeGraph:
       node =>
         isNodeDefinedInProject(
           node
-        ) && node.kind != "CLASS" && node.kind != "OBJECT" && node.kind != "TRAIT" && node.kind != "INTERFACE",
+        ) && (node.kind == "METHOD" || node.kind == "CONSTRUCTOR" || node.kind == "VALUE" || node.kind == "VARIABLE"),
+        //) && node.kind != "CLASS" && node.kind != "OBJECT" && node.kind != "TRAIT" && node.kind != "INTERFACE",
       edge => isEdgeDefinedInProject(edge) && edge.`type` == "CALL"
     )
 
