@@ -8,7 +8,7 @@ lazy val root = project
   .settings(
     name := "scg-cli",
     organization := "com.virtuslab.semanticgraphs",
-    version := "0.1.2-SNAPSHOT",
+    version := "0.1.2",
     scalaVersion := scala3Version,
     Compile / PB.targets := Seq(
       scalapb.gen() -> (Compile / sourceManaged).value
