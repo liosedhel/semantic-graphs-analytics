@@ -1,15 +1,11 @@
 package org.virtuslab.semanticgraphs.analytics.partitions.gpmetis
 
 import com.virtuslab.semanticgraphs.proto.model.graphnode.GraphNode
-import org.virtuslab.semanticgraphs.analytics.partitions.{
-  DockerDistribution,
-  GraphNodeDTO,
-  PartitionHelpers,
-  PartitionResults
-}
+import org.virtuslab.semanticgraphs.analytics.dto.GraphNodeDTO
+import org.virtuslab.semanticgraphs.analytics.partitions.{DockerDistribution, PartitionHelpers, PartitionResults}
 import org.virtuslab.semanticgraphs.analytics.scg.{ProjectAndVersion, SemanticCodeGraph}
 import org.virtuslab.semanticgraphs.analytics.utils.MultiPrinter
-import org.virtuslab.semanticgraphs.analytics.partitions.GraphNodeDTO.toGraphNodeDto
+import org.virtuslab.semanticgraphs.analytics.dto.GraphNodeDTO.toGraphNodeDto
 
 import java.io.File
 import scala.collection.mutable

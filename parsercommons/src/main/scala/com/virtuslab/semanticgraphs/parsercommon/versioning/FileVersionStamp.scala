@@ -2,24 +2,20 @@ package com.virtuslab.semanticgraphs.parsercommon.versioning
 
 import com.virtuslab.semanticgraphs.parsercommon.versioning.FileVersionStamp.*
 import com.virtuslab.semanticgraphs.parsercommon.FileOperations
-
-import play.api.libs.functional.syntax.*
-import play.api.libs.json.*
+import upickle.default.*
 
 import java.io.File
 import java.nio.file.{Files, Path}
+import scala.util.Try
 
-case class FileVersionStamp(path: String, lastModified: Long, size: Long, contentHashCode: Int) extends FileVersion {
-  def toJson: String = Json.stringify(Json.toJson(this))
-}
+case class FileVersionStamp(path: String, lastModified: Long, size: Long, contentHashCode: Int) extends FileVersion derives ReadWriter
 
 object FileVersionStamp {
-  implicit val jsonFormat: Format[FileVersionStamp] = Json.format[FileVersionStamp]
 
-  def writeSeq(stamps: Seq[FileVersionStamp]): String = Json.stringify(Json.toJson(stamps))
+  def writeSeq(stamps: Seq[FileVersionStamp]): String = write(stamps)
 
   def readSeq(stampsAsJsonString: String): Seq[FileVersionStamp] =
-    Json.fromJson[Seq[FileVersionStamp]](Json.parse(stampsAsJsonString)).asOpt.getOrElse(Seq())
+    Try(read[Seq[FileVersionStamp]](stampsAsJsonString)).getOrElse(Seq.empty)
 
   def upsertState(projectPath: Path, versions: Seq[FileVersionStamp]): Unit = {
     val file = getProjectStateFile(projectPath)

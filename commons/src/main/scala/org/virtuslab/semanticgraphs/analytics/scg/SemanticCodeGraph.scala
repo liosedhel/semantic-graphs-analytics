@@ -3,10 +3,8 @@ package org.virtuslab.semanticgraphs.analytics.scg
 import com.virtuslab.semanticgraphs.proto.model.graphnode.{Edge, GraphNode, SemanticGraphFile}
 import org.apache.commons.compress.archivers.zip.ZipFile
 import org.jgrapht.Graph
-import org.virtuslab.semanticgraphs.analytics.metrics.JGraphTMetrics.LabeledEdge
-import org.virtuslab.semanticgraphs.analytics.metrics.JGraphTMetrics
-import org.virtuslab.semanticgraphs.analytics.utils.PathHelpers._
-
+import org.virtuslab.semanticgraphs.analytics.scg.ScgJGraphT.LabeledEdge
+import org.virtuslab.semanticgraphs.analytics.utils.PathHelpers.*
 import java.nio.file.Files
 
 class SemanticCodeGraph(
@@ -19,7 +17,7 @@ class SemanticCodeGraph(
   lazy val nodes: Iterable[GraphNode] = nodesMap.values
 
   lazy val graph: Graph[String, LabeledEdge] =
-    buildGraph(JGraphTMetrics.emptyGraph())
+    buildGraph(ScgJGraphT.emptyGraph())
 
   private def buildGraph(graph: Graph[String, LabeledEdge]): Graph[String, LabeledEdge] =
     nodes.foreach { node =>

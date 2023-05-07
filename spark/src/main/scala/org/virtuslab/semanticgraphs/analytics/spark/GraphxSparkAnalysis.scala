@@ -1,10 +1,10 @@
 package org.virtuslab.semanticgraphs.analytics.spark
-import org.apache.spark._
-import org.apache.spark.graphx._
+import org.apache.spark.*
+import org.apache.spark.graphx.*
 import org.apache.spark.graphx.lib.ShortestPaths
 import org.apache.spark.sql.SparkSession
 import org.virtuslab.semanticgraphs.analytics.scg.SemanticCodeGraph
-import org.virtuslab.semanticgraphs.analytics.spark.com.centrality.kBC.KBetweenness
+import org.virtuslab.semanticgraphs.analytics.spark.KBetweenness
 import org.virtuslab.semanticgraphs.analytics.{scg, utils}
 // To make some of the examples work we will also need RDD
 import org.apache.spark.rdd.RDD

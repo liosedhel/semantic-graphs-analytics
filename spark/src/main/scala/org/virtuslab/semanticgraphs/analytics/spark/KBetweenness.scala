@@ -1,17 +1,9 @@
 package org.virtuslab.semanticgraphs.analytics.spark
 
-package com.centrality.kBC
+import org.apache.spark.graphx.*
 
+import scala.collection.mutable.{HashMap, ListBuffer, Queue, Stack}
 import scala.reflect.ClassTag
-import org.apache.spark.graphx.VertexId
-import org.apache.spark.graphx.Graph
-import org.apache.spark.graphx.EdgeTriplet
-import org.apache.spark.graphx.Pregel
-import org.apache.spark.graphx.EdgeDirection
-import scala.collection.mutable.Stack
-import scala.collection.mutable.Queue
-import scala.collection.mutable.HashMap
-import scala.collection.mutable.ListBuffer
 
 object KBetweenness:
   def run[VD : ClassTag, ED : ClassTag](graph: Graph[VD, ED], k: Int): Graph[Double, Double] =

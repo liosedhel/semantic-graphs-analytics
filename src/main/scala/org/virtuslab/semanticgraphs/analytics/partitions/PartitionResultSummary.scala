@@ -2,13 +2,12 @@ package org.virtuslab.semanticgraphs.analytics.partitions
 
 import org.virtuslab.semanticgraphs.analytics.crucial.CrucialNodes.getClass
 import org.virtuslab.semanticgraphs.analytics.crucial.CrucialNodesSummary
-import io.circe.generic.auto.*
-import io.circe.syntax.*
+import upickle.default.*
 
 import java.nio.file.{Files, Path, StandardCopyOption}
 
 //|Method |NPart|Modularity|Coefficient|Weighted|Accuracy|Weighted|Accuracy|Variance|Distribution
-case class AverageAccuracy(weighted: Int, standard: Int)
+case class AverageAccuracy(weighted: Int, standard: Int) derives ReadWriter
 case class ShortSummary(
   method: String,
   npart: Int,
@@ -18,18 +17,18 @@ case class ShortSummary(
   `package`: AverageAccuracy,
   variance: Double,
   distribution: String
-)
+) derives ReadWriter
 
-case class PartitionPackageSummary(method: String, part: Int, accuracy: Int, `package`: String, distribution: String)
-case class PartitionFileSummary(method: String, part: Int, accuracy: Int, file: String, distribution: String)
+case class PartitionPackageSummary(method: String, part: Int, accuracy: Int, `package`: String, distribution: String) derives ReadWriter
+case class PartitionFileSummary(method: String, part: Int, accuracy: Int, file: String, distribution: String) derives ReadWriter
 
 case class PartitionResultsSummary(
   nparts: Int,
   byPackage: List[PartitionPackageSummary],
   byFile: List[PartitionFileSummary]
-)
+) derives ReadWriter
 
-case class PartitionResultsWrapper(results: List[PartitionResultsSummary], summary: List[ShortSummary])
+case class PartitionResultsWrapper(results: List[PartitionResultsSummary], summary: List[ShortSummary]) derives ReadWriter
 
 object PartitionResultsSummary:
 
@@ -83,7 +82,7 @@ object PartitionResultsSummary:
   private def exportJsSummary(fileName: String, summary: PartitionResultsWrapper): Unit = {
     import java.io._
     val pw = new PrintWriter(new File(fileName))
-    val json = s"const partition = ${summary.asJson.spaces2};"
+    val json = s"const partition = ${write(summary)};"
     pw.write(json)
     pw.close()
   }

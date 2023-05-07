@@ -7,11 +7,10 @@ import org.virtuslab.semanticgraphs.analytics.partitions.comparison.Partitioning
 import org.virtuslab.semanticgraphs.analytics.scg.{ProjectAndVersion, SemanticCodeGraph}
 import org.virtuslab.semanticgraphs.analytics.utils.{JsonUtils, MultiPrinter}
 import org.virtuslab.semanticgraphs.analytics.summary.SCGProjectSummary
-import io.circe.generic.auto.*
-import io.circe.syntax.*
 import org.virtuslab.semanticgraphs.analytics.crucial.CrucialNodes
+import org.virtuslab.semanticgraphs.analytics.dto.{EdgeDTO, GraphNodeDTO, LocationDTO}
 import org.virtuslab.semanticgraphs.analytics.exporters.{ExportToGdf, JupyterNotebook}
-import org.virtuslab.semanticgraphs.analytics.partitions.{EdgeDTO, GraphNodeDTO, LocationDTO, PartitionResults, PartitionResultsSummary}
+import org.virtuslab.semanticgraphs.analytics.partitions.{PartitionResults, PartitionResultsSummary}
 import picocli.CommandLine
 import picocli.CommandLine.{Command, HelpCommand, Option, Parameters}
 import picocli.CommandLine.Model.CommandSpec
@@ -60,11 +59,26 @@ class ScgCli:
       paramLabel = "<workspace>",
       description = Array("Workspace where SCG proto files are located in .semanticgraphs directory or zipped archive")
     )
-    workspace: String
+    workspace: String,
+    @Option(
+      names = Array("-o", "--output"),
+      description = Array("Output format: html, json, txt"),
+      arity = "0..1",
+      defaultValue = "html"
+    )
+    output: String
   ): Unit =
-    val scg = SemanticCodeGraph.read(ProjectAndVersion(workspace, workspace.split("/").last, ""))
-    val summary = SCGProjectSummary.summary(scg)
-    SCGProjectSummary.exportHtmlSummary(summary)
+    output match {
+      case "html" =>
+        val scg = SemanticCodeGraph.read(ProjectAndVersion(workspace, workspace.split("/").last, ""))
+        val summary = SCGProjectSummary.summary(scg)
+        SCGProjectSummary.exportHtmlSummary(summary)
+      case "txt" =>
+        val scg = SemanticCodeGraph.read(ProjectAndVersion(workspace, workspace.split("/").last, ""))
+        val summary = SCGProjectSummary.summary(scg)
+        SCGProjectSummary.exportTxt(summary)
+    }
+
 
   @Command(name = "crucial", description = Array("Find crucial code entities"))
   def crucial(
@@ -95,10 +109,10 @@ class ScgCli:
         CrucialNodes.exportHtmlSummary(summary)
       case "json" =>
         val outputFile = s"${scg.projectName}.crucial.json"
-        JsonUtils.dumpJsonFile(outputFile, summary.asJson.toString)
+        JsonUtils.dumpJsonFile(outputFile, write(summary))
         println(s"Results exported to: $outputFile")
       case "txt" =>
-        println(summary.asJson.spaces2)
+        println(write(summary, 2))
     }
 
   case class PartitionResult(results: List[PartitionResults])

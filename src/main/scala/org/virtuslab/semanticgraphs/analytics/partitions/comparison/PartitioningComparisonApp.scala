@@ -4,15 +4,12 @@ import com.virtuslab.semanticgraphs.proto.model.graphnode.{GraphNode, Location}
 import org.virtuslab.semanticgraphs.analytics.partitions.gpmetis.GpmetisPartitions
 import org.virtuslab.semanticgraphs.analytics.partitions.patoh.PatohPartitions
 import org.virtuslab.semanticgraphs.analytics.partitions.{
-  EdgeDTO,
-  GraphNodeDTO,
-  LocationDTO,
   PartitionHelpers,
   PartitionResults
 }
 import org.virtuslab.semanticgraphs.analytics.scg.{ProjectAndVersion, SemanticCodeGraph}
 import org.virtuslab.semanticgraphs.analytics.utils.MultiPrinter
-import org.virtuslab.semanticgraphs.analytics.partitions.GraphNodeDTO.toGraphNodeDto
+import org.virtuslab.semanticgraphs.analytics.dto.GraphNodeDTO.toGraphNodeDto
 
 object PartitioningComparisonApp:
 

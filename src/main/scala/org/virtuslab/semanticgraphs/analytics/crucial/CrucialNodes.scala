@@ -1,25 +1,26 @@
 package org.virtuslab.semanticgraphs.analytics.crucial
 
-import io.circe.generic.auto.*
-import io.circe.syntax.*
 import org.jgrapht.alg.scoring.*
-import org.virtuslab.semanticgraphs.analytics.metrics.JGraphTMetrics.LabeledEdge
 import org.virtuslab.semanticgraphs.analytics.metrics.JGraphTMetrics
+import org.virtuslab.semanticgraphs.analytics.scg.ScgJGraphT.LabeledEdge
 import org.virtuslab.semanticgraphs.analytics.scg.{ProjectAndVersion, SemanticCodeGraph}
 import org.virtuslab.semanticgraphs.analytics.summary.SCGProjectSummary
 import org.virtuslab.semanticgraphs.analytics.summary.SCGProjectSummary.getClass
 import org.virtuslab.semanticgraphs.analytics.utils.JsonUtils
+
+import upickle.default.*
 
 import java.lang
 import java.nio.file.{Files, Path, StandardCopyOption}
 import java.util.concurrent.Executors
 import scala.jdk.CollectionConverters.{CollectionHasAsScala, MapHasAsScala}
 
-case class NodeScore(id: String, label: String, score: Double)
-case class Statistic(id: String, description: String, nodes: List[NodeScore])
+case class NodeScore(id: String, label: String, score: Double) derives ReadWriter
+case class Statistic(id: String, description: String, nodes: List[NodeScore]) derives ReadWriter
 
-case class MetricIdAndDescription(id: String, desc: String):
+case class MetricIdAndDescription(id: String, desc: String) derives ReadWriter:
   override def toString(): String = desc
+
 object Statistic:
   val loc = MetricIdAndDescription("loc", "Lines of Code")
   val outDegree = MetricIdAndDescription("out-degree", "Outgoing Degree")
@@ -34,7 +35,7 @@ case class CrucialNodesSummary(
   projectName: String,
   workspace: String,
   stats: List[Statistic]
-)
+) derives ReadWriter
 
 object CrucialNodes:
 
@@ -55,7 +56,7 @@ object CrucialNodes:
         false
       )
     val outputFile = s"$filePrefix-stats-${semanticCodeGraph.projectName}.crucial.json"
-    JsonUtils.dumpJsonFile(outputFile, stats.asJson.toString)
+    JsonUtils.dumpJsonFile(outputFile, write(stats))
     println(s"Results exported to: $outputFile")
     stats
 
@@ -67,7 +68,7 @@ object CrucialNodes:
   private def exportJsSummary(fileName: String, summary: CrucialNodesSummary): Unit = {
     import java.io._
     val pw = new PrintWriter(new File(fileName))
-    val json = s"const crucial = ${summary.asJson.spaces2};"
+    val json = s"const crucial = ${write(summary)};"
     pw.write(json)
     pw.close()
   }

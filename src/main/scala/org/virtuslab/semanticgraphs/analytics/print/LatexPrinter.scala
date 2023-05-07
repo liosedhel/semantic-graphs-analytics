@@ -6,6 +6,7 @@ import org.virtuslab.semanticgraphs.analytics.scg.SemanticCodeGraph
 import java.nio.file.{Files, Path}
 import scala.io.Source
 import scala.jdk.CollectionConverters.IteratorHasAsScala
+import upickle.default.*
 
 object LatexPrinter:
 
@@ -41,7 +42,6 @@ object LatexPrinter:
 
 object LatexScoresPrinterApp extends App:
 
-  import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
   def readScores(filePrefix: String): List[CrucialNodesSummary] =
     Files
       .list(Path.of("./analysis"))
@@ -50,7 +50,7 @@ object LatexScoresPrinterApp extends App:
       .filter(x => Files.isRegularFile(x) && x.getFileName.toString.startsWith(filePrefix))
       .map { file =>
         val fileContent = Source.fromFile(file.toUri).getLines().mkString
-        decode[CrucialNodesSummary](fileContent).getOrElse(throw new RuntimeException("Parsing problem"))
+        read[CrucialNodesSummary](fileContent)
       }
       .toList
       .sortBy(summary => SemanticCodeGraph.allProjects.map(_.projectName).indexOf(summary.projectName))
@@ -92,7 +92,6 @@ object LatexScoresPrinterApp extends App:
 
 object LatexCombinedPrinterApp extends App:
 
-  import io.circe._, io.circe.generic.auto._, io.circe.parser._, io.circe.syntax._
   def readScores(filePrefix: String): List[CrucialNodesSummary] =
     Files
       .list(Path.of("./analysis"))
@@ -101,7 +100,7 @@ object LatexCombinedPrinterApp extends App:
       .filter(x => Files.isRegularFile(x) && x.getFileName.toString.startsWith(filePrefix))
       .map { file =>
         val fileContent = Source.fromFile(file.toUri).getLines().mkString
-        decode[CrucialNodesSummary](fileContent).getOrElse(throw new RuntimeException("Parsing problem"))
+        read[CrucialNodesSummary](fileContent)
       }
       .toList
       .sortBy(summary => SemanticCodeGraph.allProjects.map(_.projectName).indexOf(summary.projectName))

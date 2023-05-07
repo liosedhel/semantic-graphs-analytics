@@ -1,6 +1,7 @@
 package org.virtuslab.semanticgraphs.analytics.partitions
 
 import com.virtuslab.semanticgraphs.proto.model.graphnode.GraphNode
+import org.virtuslab.semanticgraphs.analytics.dto.GraphNodeDTO
 import org.virtuslab.semanticgraphs.analytics.metrics.JGraphTMetrics
 import org.virtuslab.semanticgraphs.analytics.partitions.patoh.PatohClustering.workspace
 import org.virtuslab.semanticgraphs.analytics.scg.SemanticCodeGraph

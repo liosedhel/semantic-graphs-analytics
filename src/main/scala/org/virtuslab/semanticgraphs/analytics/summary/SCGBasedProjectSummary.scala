@@ -1,8 +1,6 @@
 package org.virtuslab.semanticgraphs.analytics.summary
 
 import scala.jdk.CollectionConverters.*
-import io.circe.generic.auto.*
-import io.circe.syntax.*
 import org.virtuslab.semanticgraphs.analytics.crucial.{CrucialNodes, CrucialNodesSummary}
 import org.virtuslab.semanticgraphs.analytics.metrics.JGraphTMetrics
 import org.virtuslab.semanticgraphs.analytics.scg.{ProjectAndVersion, SemanticCodeGraph}
@@ -12,8 +10,10 @@ import java.nio.file.{Files, Path, StandardCopyOption}
 import scala.concurrent.duration.Duration
 import scala.concurrent.{Await, Future}
 
-case class NodeKindAndNumber(kind: String, number: Int)
-case class EdgeTypeAndNumber(`type`: String, number: Int)
+import upickle.default.*
+
+case class NodeKindAndNumber(kind: String, number: Int) derives ReadWriter
+case class EdgeTypeAndNumber(`type`: String, number: Int) derives ReadWriter
 case class SCGProjectSummary(
   name: String,
   version: String,
@@ -27,7 +27,7 @@ case class SCGProjectSummary(
   globalClusteringCoefficient: Double,
   assortativityCoefficient: Double,
   totalLoc: Long
-)
+) derives ReadWriter
 
 object SCGProjectSummary:
   def summary(scg: SemanticCodeGraph): SCGProjectSummary =
@@ -74,18 +74,19 @@ object SCGProjectSummary:
       totalLoc = totalLoc
     )
 
-  import io.circe.generic.auto.*
-  import io.circe.syntax.*
-
   def exportHtmlSummary(summary: SCGProjectSummary): Unit = {
     exportJsSummary("summary.js", summary)
     copySummaryHtml(Path.of("."))
   }
 
+  def exportTxt(summary: SCGProjectSummary): Unit = {
+    print(write(summary))
+  }
+
   private def exportJsSummary(fileName: String, summary: SCGProjectSummary): Unit = {
     import java.io._
     val pw = new PrintWriter(new File(fileName))
-    val json = s"const summary = ${summary.asJson.spaces2};"
+    val json = s"const summary = ${write(summary)};"
     pw.write(json)
     pw.close()
   }
@@ -102,7 +103,7 @@ object SCGBasedProjectSummary extends App:
 
   def exportSummary(): Unit =
     val summary = projects.map(SCGProjectSummary.summary)
-    JsonUtils.dumpJsonFile("summary.json", summary.asJson.spaces2)
+    JsonUtils.dumpJsonFile("summary.json", write(summary))
 
   def printSummaryLatexTable() =
     println()

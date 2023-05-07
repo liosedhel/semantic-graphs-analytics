@@ -2,60 +2,20 @@ package org.virtuslab.semanticgraphs.analytics.metrics
 
 import com.virtuslab.semanticgraphs.proto.model.graphnode.GraphNode
 import org.jgrapht.alg.clustering.{GirvanNewmanClustering, KSpanningTreeClustering, LabelPropagationClustering}
-import org.jgrapht.alg.connectivity.{
-  BiconnectivityInspector,
-  ConnectivityInspector,
-  KosarajuStrongConnectivityInspector
-}
+import org.jgrapht.alg.connectivity.{BiconnectivityInspector, ConnectivityInspector, KosarajuStrongConnectivityInspector}
 import org.jgrapht.alg.scoring.{BetweennessCentrality, ClusteringCoefficient}
 import org.jgrapht.alg.shortestpath.{BFSShortestPath, GraphMeasurer}
 import org.jgrapht.graph.{AsUndirectedGraph, DefaultEdge}
 import org.jgrapht.graph.builder.GraphTypeBuilder
 import org.jgrapht.{Graph, GraphMetrics}
-import org.virtuslab.semanticgraphs.analytics.partitions.{GraphNodeDTO, PartitionResults}
+import org.virtuslab.semanticgraphs.analytics.dto.GraphNodeDTO
+import org.virtuslab.semanticgraphs.analytics.partitions.PartitionResults
+import org.virtuslab.semanticgraphs.analytics.scg.ScgJGraphT
+import org.virtuslab.semanticgraphs.analytics.scg.ScgJGraphT.LabeledEdge
 
 object JGraphTMetrics:
 
   import scala.jdk.CollectionConverters.{ListHasAsScala, SetHasAsScala}
-
-  def emptyGraph(): Graph[String, LabeledEdge] =
-    GraphTypeBuilder
-      .directed[String, LabeledEdge]()
-      .allowingMultipleEdges(true)
-      .allowingSelfLoops(false)
-      .edgeClass(classOf[LabeledEdge])
-      .buildGraph()
-
-  def emptyUndirectedGraph(): Graph[String, LabeledEdge] =
-    GraphTypeBuilder
-      .undirected[String, LabeledEdge]()
-      // .allowingMultipleEdges(true)
-      .allowingSelfLoops(false)
-      .edgeClass(classOf[LabeledEdge])
-      .buildGraph()
-
-  case class LabeledEdge(parentId: String, childId: String, role: String) extends DefaultEdge
-
-  def addEdge(graph: Graph[String, LabeledEdge], parentId: String, childId: String, role: String): Unit =
-    if parentId != childId then
-      graph.addVertex(childId)
-      graph.addVertex(parentId)
-      graph.addEdge(
-        parentId,
-        childId,
-        LabeledEdge(parentId, childId, role)
-      )
-
-  def exportUndirected(nodes: Iterable[GraphNodeDTO]): Graph[String, LabeledEdge] =
-    val graph: Graph[String, LabeledEdge] = emptyUndirectedGraph()
-
-    nodes
-      .foreach { node =>
-        graph.addVertex(node.id)
-        node.edges.foreach(edge => addEdge(graph, node.id, edge.to, edge.`type`))
-      }
-
-    graph
 
   def computeStronglyConnectedComponents(directedGraph: Graph[String, LabeledEdge]): Map[String, Int] =
     val scAlg = new KosarajuStrongConnectivityInspector(directedGraph)
@@ -91,7 +51,7 @@ object JGraphTMetrics:
       case (map, (nodes, index)) => nodes.foldLeft(map)((r, node) => r.updated(node, index))
     }
   def labelPropagationClustering(graph: List[GraphNodeDTO], maxIterations: Int): PartitionResults =
-    val undirectedGraph = exportUndirected(graph)
+    val undirectedGraph = ScgJGraphT.exportUndirected(graph)
     val part = new LabelPropagationClustering[String, LabeledEdge](undirectedGraph, maxIterations)
     val nodeToPart =
       part.getClustering.getClusters.asScala.toList.map(_.asScala.toSet).zipWithIndex.foldLeft(Map.empty[String, Int]) {
@@ -106,7 +66,7 @@ object JGraphTMetrics:
     )
 
   def GirvanNewmanClustering(graph: List[GraphNodeDTO], k: Int): PartitionResults =
-    val undirectedGraph = exportUndirected(graph)
+    val undirectedGraph = ScgJGraphT.exportUndirected(graph)
     val part = new GirvanNewmanClustering[String, LabeledEdge](undirectedGraph, k)
     val nodeToPart =
       part.getClustering.getClusters.asScala.toList.map(_.asScala.toSet).zipWithIndex.foldLeft(Map.empty[String, Int]) {
