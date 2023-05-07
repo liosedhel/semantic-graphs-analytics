@@ -31,12 +31,19 @@ $ ./target/universal/stage/bin/scg-cli summary data/metals.zip
 
 ## Using on your java project
 
-First the metadata for the project has to be generated
+Generate Semantic Code Graph information model metadata:
 ```bash
 $ ./target/universal/stage/bin/scg-cli generate path/to/project
 ```
 
-It will take a moment to generate the metadata. Then you can start to analyse your project:
+Start to analyse your project, e.g.:
 ```bash
 $ ./target/universal/stage/bin/scg-cli summary path/to/project
+```
+
+
+## Building new release
+
+```bash
+$ sbt universal:packageBin
 ```

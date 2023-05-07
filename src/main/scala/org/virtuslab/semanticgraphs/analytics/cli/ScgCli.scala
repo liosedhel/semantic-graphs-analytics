@@ -30,13 +30,25 @@ import java.nio.file.{Files, Path}
 )
 class ScgCli:
 
+  @Command(name = "version", description = Array("Show scg-cli version"))
+  def version() = {
+    println("scg-cli 0.1.2-SNAPSHOT")
+  }
+
   @Command(name = "generate", description = Array("Generate SCG metadata"))
   def generate(
     @Parameters(
       paramLabel = "<workspace>",
-      description = Array("Workspace where SCG proto files are located in .semanticgraphs directory or zipped archive")
+      description = Array("Workspace where the project is located")
     )
-    workspace: String
+    workspace: String,
+    @Option(
+      names = Array("-l", "--language"),
+      description = Array("Language of the project"),
+      arity = "0..1",
+      defaultValue = "java"
+    )
+    language: String
   ): Unit =
     println(s"Generating SCG metadata for $workspace")
     JavaParserMain.generateSemanticGraphFiles(workspace)

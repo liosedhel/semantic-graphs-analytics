@@ -11,3 +11,4 @@ target
 .DS_Store
 __pycache__
 trash
+docker/jupyter/test*
